@@ -1,11 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using MilenialPark.Views;
 using MilenialPark.Master;
@@ -20,65 +13,106 @@ namespace MilenialPark
             InitializeComponent();
         }
 
+        private void FormLogin_Load(object sender, EventArgs e)
+        {
+            try
+            {
+                ClsStaticVariable.setNewConnection("WHNPOS", txtServer.Text);
+                ClsStaticVariable.controllerUser.SetCabang();
+                setcbxCategory();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    "Gagal terhubung ke database.\n\n" + ex.Message,
+                    "Connection Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
+        }
+
         private void txtpassword_KeyUp(object sender, KeyEventArgs e)
         {
-            if (e.KeyCode == Keys.Enter)
-            {
-                txtUserID.Focus();
-                iconButton2_Click(null, null);
-            }
+            if (e.KeyCode != Keys.Enter)
+                return;
+
+            e.SuppressKeyPress = true;
+            iconButton2_Click(null, EventArgs.Empty);
         }
 
         private void iconButton2_Click(object sender, EventArgs e)
         {
-            //ClsStaticVariable.setNewConnection("cradlesp_desktop", txtServer.Text);
-            
-            if (txtUserID.Text.Trim() == "" || txtUserID.Text.Trim() == null)
+            string userID = txtUserID.Text.Trim();
+            string password = txtpassword.Text;
+
+            if (string.IsNullOrWhiteSpace(userID) ||
+                string.IsNullOrWhiteSpace(password))
             {
-                ClsFungsi.Pesan("UserID atau Password Kosong", "INFO");
+                ClsFungsi.Pesan(
+                    "UserID atau Password Kosong",
+                    "INFO"
+                );
+
+                return;
             }
-            else if (txtpassword.Text.Trim() == "" || txtpassword.Text.Trim() == null)
+
+            if (cbxCategory.SelectedItem == null ||
+                string.IsNullOrWhiteSpace(ClsStaticVariable.KodeBranch))
             {
-                ClsFungsi.Pesan("UserID atau Password Kosong", "INFO");
+                ClsFungsi.Pesan(
+                    "Cabang belum dipilih",
+                    "INFO"
+                );
+
+                return;
             }
-            else
+
+            try
             {
-                try
+                ClsStaticVariable.controllerUser.objUser =
+                    ClsStaticVariable.controllerUser.getOneUser(
+                        userID,
+                        password
+                    );
+
+                if (ClsStaticVariable.controllerUser.objUser == null)
                 {
-                    ClsStaticVariable.controllerUser.objUser = ClsStaticVariable.controllerUser.getOneUser(txtUserID.Text, txtpassword.Text);
-                    if (ClsStaticVariable.controllerUser.objUser == null)
-                    {
-                        ClsFungsi.Pesan("UserID atau Password Salah", "INFO");
-                    }
-                    else
-                    {
+                    ClsFungsi.Pesan(
+                        "UserID atau Password Salah",
+                        "INFO"
+                    );
 
-                        if (txtpassword.Text == new ClsCrypthography().DecryptString(ClsStaticVariable.controllerUser.objUser.Password))
-                        {
-                            Mainform frmMainForm = new Mainform(this);
-                            frmMainForm.Show();
-                        }
-                        else
-                        {
-                            ClsFungsi.Pesan("UserID atau Password Salah", "INFO");
-                        }
-                    }
+                    return;
                 }
-                catch (Exception ex)
+
+                string decryptedPassword =
+                    new ClsCrypthography().DecryptString(
+                        ClsStaticVariable.controllerUser.objUser.Password
+                    );
+
+                if (password != decryptedPassword)
                 {
-                    MessageBox.Show(ex.Message);
+                    ClsFungsi.Pesan(
+                        "UserID atau Password Salah",
+                        "INFO"
+                    );
+
+                    return;
                 }
+
+                Mainform frmMainForm = new Mainform(this);
+                frmMainForm.Show();
             }
-        }
-
-        private void btnExit_Click(object sender, EventArgs e)
-        {
-            this.Close();
-        }
-
-        private void btnMinimize_Click(object sender, EventArgs e)
-        {
-            WindowState = FormWindowState.Minimized;
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    ex.Message,
+                    "Login Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+            }
         }
 
         public void setcbxCategory()
@@ -86,29 +120,70 @@ namespace MilenialPark
             cbxCategory.Items.Clear();
             cbxCategory.DisplayMember = "Text";
             cbxCategory.ValueMember = "Value";
-            int selected = 0;
-            foreach (ClsCabang x in ClsStaticVariable.controllerUser.listcabang)
+
+            int selectedIndex = -1;
+            int index = 0;
+
+            foreach (ClsCabang cabang in
+                     ClsStaticVariable.controllerUser.listcabang)
             {
-                if (ClsStaticVariable.controllerUser.listcabang.Count != 0)
+                cbxCategory.Items.Add(new
                 {
-                    cbxCategory.Items.Add(new { Text = (x.KodeCabang + "-" + x.NamaCabang), Value = x.KodeCabang });
+                    Text = cabang.KodeCabang
+                           + " - "
+                           + cabang.NamaCabang,
+
+                    Value = cabang.KodeCabang
+                });
+
+                if (!string.IsNullOrWhiteSpace(
+                        ClsStaticVariable.KodeBranch) &&
+                    string.Equals(
+                        cabang.KodeCabang,
+                        ClsStaticVariable.KodeBranch,
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    selectedIndex = index;
                 }
-                cbxCategory.SelectedIndex = selected;
+
+                index++;
             }
-            
+
+            if (selectedIndex >= 0)
+            {
+                cbxCategory.SelectedIndex = selectedIndex;
+            }
+            else if (cbxCategory.Items.Count > 0)
+            {
+                cbxCategory.SelectedIndex = 0;
+            }
+            else
+            {
+                ClsStaticVariable.KodeBranch = "";
+            }
         }
 
-        private void FormLogin_Load(object sender, EventArgs e)
+        private void cbxCategory_SelectedIndexChanged(
+            object sender,
+            EventArgs e)
         {
-            ClsStaticVariable.setNewConnection("WHNPOS", txtServer.Text);
-            ClsStaticVariable.controllerUser.SetCabang();
+            if (cbxCategory.SelectedItem == null)
+                return;
 
-            setcbxCategory();
+            ClsStaticVariable.KodeBranch =
+                Convert.ToString(
+                    (cbxCategory.SelectedItem as dynamic).Value
+                );
         }
 
-        private void cbxCategory_SelectedIndexChanged(object sender, EventArgs e)
+        private void btnExit_Click(object sender, EventArgs e)
         {
-            ClsStaticVariable.KodeBranch = Convert.ToString((cbxCategory.SelectedItem as dynamic).Value);
+            Close();
+        }
+
+        private void btnMinimize_Click(object sender, EventArgs e)
+        {
+            WindowState = FormWindowState.Minimized;
         }
     }
 }

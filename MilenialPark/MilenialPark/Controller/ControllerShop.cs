@@ -187,15 +187,36 @@ namespace MilenialPark.Controller
             }
         }
 
-        public void getShop2(string ShopID)
+        public bool getShop2(string shopID)
         {
-            query = "Select * from WHNPOS.dbo.Shop where ShopID = " + ClsFungsi.C2Q(ShopID);
-            dt = ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(query);
-            if (dt.Rows.Count != 0)
-            {
-                objShop = new ClsShop(dt.Rows[0]["ShopID"].ToString(), dt.Rows[0]["ShopName"].ToString(), dt.Rows[0]["MainProduct"].ToString(), dt.Rows[0]["Address"].ToString(), dt.Rows[0]["UserID"].ToString(), dt.Rows[0]["ShopStatus"].ToString());
+            objShop = null;
 
+            query =
+                "Select ShopID, ShopName, MainProduct, Address, UserID, ShopStatus " +
+                "from WHNPOS.dbo.Shop " +
+                "where ShopID = " + ClsFungsi.C2Q(shopID);
+
+            dt = ClsStaticVariable.objConnection
+                .objsqlconnection
+                .Filldatatable(query);
+
+            if (dt.Rows.Count == 0)
+            {
+                return false;
             }
+
+            DataRow row = dt.Rows[0];
+
+            objShop = new ClsShop(
+                row["ShopID"].ToString(),
+                row["ShopName"].ToString(),
+                row["MainProduct"].ToString(),
+                row["Address"].ToString(),
+                row["UserID"].ToString(),
+                row["ShopStatus"].ToString()
+            );
+
+            return true;
         }
 
         public void getcashier(string UserID)
@@ -291,10 +312,20 @@ namespace MilenialPark.Controller
             return ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(query);
         }
 
-        public DataTable getOneShopItem(string ShopID, string ItemID)
+        public DataTable getOneShopItem(
+    string shopID,
+    string itemID)
         {
-            query = "Select ItemID, ItemName, Price, ItemDesc, ImageFilePath, Category, TopUpAmount from WHNPOS.dbo.ShopItem where ShopID = " + ClsFungsi.C2Q(ShopID) + "and ItemID = " + ClsFungsi.C2Q(ItemID);
-            return ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(query);
+            query =
+                "Select ItemID, ShopID, ItemName, Price, ItemDesc, " +
+                "ImageFilePath, Category, TopUpAmount " +
+                "from WHNPOS.dbo.ShopItem " +
+                "where ShopID = " + ClsFungsi.C2Q(shopID) + " " +
+                "and ItemID = " + ClsFungsi.C2Q(itemID);
+
+            return ClsStaticVariable.objConnection
+                .objsqlconnection
+                .Filldatatable(query);
         }
 
         public DataTable getOneShopItemTiket(string ShopID, string ItemID)
@@ -541,6 +572,89 @@ namespace MilenialPark.Controller
         {
             query = "Select distinct IsNull(Category, '') as Category from WHNPOS.dbo.ShopItemTiket";
             return ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(query);
+        }
+
+        public DataTable getTopUpItems(string shopID)
+        {
+            query =
+                "Select ItemID, ShopID, ItemName, Price, ItemDesc, " +
+                "ImageFilePath, Category, TopUpAmount " +
+                "from WHNPOS.dbo.ShopItem " +
+                "where ShopID = " + ClsFungsi.C2Q(shopID) + " " +
+                "and (ItemName like '%TOP%UP%' " +
+                "or Category like '%TOPUP%' " +
+                "or IsNull(TopUpAmount, 0) > 0) " +
+                "order by ItemName";
+
+            return ClsStaticVariable.objConnection
+                .objsqlconnection
+                .Filldatatable(query);
+        }
+
+        public ClsShopItem getShopItemByID(
+    string shopID,
+    string itemID)
+        {
+            query =
+                "Select ItemID, ShopID, ItemName, Price, ItemDesc, " +
+                "ImageFilePath, Category, TopUpAmount " +
+                "from WHNPOS.dbo.ShopItem " +
+                "where ShopID = " + ClsFungsi.C2Q(shopID) + " " +
+                "and ItemID = " + ClsFungsi.C2Q(itemID);
+
+            dt = ClsStaticVariable.objConnection
+                .objsqlconnection
+                .Filldatatable(query);
+
+            if (dt.Rows.Count == 0)
+            {
+                return null;
+            }
+
+            DataRow row = dt.Rows[0];
+
+            return new ClsShopItem(
+                row["ItemID"].ToString(),
+                row["ShopID"].ToString(),
+                row["ItemName"].ToString(),
+                Convert.ToDecimal(row["Price"]),
+                row["ItemDesc"].ToString(),
+                0,
+                row["ImageFilePath"].ToString(),
+                row["Category"].ToString()
+            );
+        }
+
+        public ClsShopItem getRefundItem(string shopID)
+        {
+            query =
+                "Select top 1 ItemID, ShopID, ItemName, Price, " +
+                "ItemDesc, ImageFilePath, Category, TopUpAmount " +
+                "from WHNPOS.dbo.ShopItem " +
+                "where ShopID = " + ClsFungsi.C2Q(shopID) + " " +
+                "and ItemName like '%REFUND%' " +
+                "order by ItemID";
+
+            dt = ClsStaticVariable.objConnection
+                .objsqlconnection
+                .Filldatatable(query);
+
+            if (dt.Rows.Count == 0)
+            {
+                return null;
+            }
+
+            DataRow row = dt.Rows[0];
+
+            return new ClsShopItem(
+                row["ItemID"].ToString(),
+                row["ShopID"].ToString(),
+                row["ItemName"].ToString(),
+                Convert.ToDecimal(row["Price"]),
+                row["ItemDesc"].ToString(),
+                0,
+                row["ImageFilePath"].ToString()
+            );
         }
 
         #region  CRUID

@@ -23,6 +23,7 @@ namespace MilenialPark.Views
         private Form currentChildForm;
         FrmGateControl frmGatectrl = new FrmGateControl();
         public ControllerShop controllerShop = new ControllerShop();
+        private bool isApplicationExiting;
 
         #endregion
 
@@ -55,34 +56,93 @@ namespace MilenialPark.Views
 
         public Mainform(FormLogin login)
         {
-            this.frmLogin = login;
-            this.frmLogin.Hide();
             InitializeComponent();
-            lblUserName.Text = ClsStaticVariable.controllerUser.objUser.UserName;
-            BranchCode.Text = ClsStaticVariable.KodeBranch;
 
-            if (ClsStaticVariable.controllerUser.objUser.TipeUser != "SuperAdmin" && ClsStaticVariable.controllerUser.objUser.TipeUser != "Admin")
+            frmLogin = login;
+
+            if (frmLogin != null)
             {
-                btnadminManagement.Visible = false;
-            }
-            else
-            {
-                btnadminManagement.Visible = true;
+                frmLogin.Hide();
             }
 
-            if (ClsStaticVariable.controllerUser.objUser.TipeUser == "Supervisor")
+            try
             {
-                btnShop.Visible = false;
-                btnOrders.Visible = false;
-                btnHistory.Visible = false;
+                LoadCurrentUser();
+                LoadUniversalShop();
+                setHakAkses();
             }
-            else if (ClsStaticVariable.controllerUser.objUser.TipeUser == "Cashier")
+            catch (Exception ex)
             {
+                MessageBox.Show(
+                    ex.Message,
+                    "Main Form Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
 
+                Close();
+            }
+        }
+
+        private void LoadCurrentUser()
+        {
+            if (ClsStaticVariable.controllerUser.objUser == null)
+            {
+                throw new InvalidOperationException(
+                    "Data user login tidak tersedia."
+                );
             }
 
-            //hasShop();
-            setHakAkses();
+            lblUserName.Text =
+                ClsStaticVariable.controllerUser.objUser.UserName;
+
+            BranchCode.Text =
+                ClsStaticVariable.KodeBranch;
+        }
+
+        private void LoadUniversalShop()
+        {
+            string shopID = ClsStaticVariable.ShopID;
+
+            if (string.IsNullOrWhiteSpace(shopID))
+            {
+                throw new InvalidOperationException(
+                    "ShopID universal belum ditentukan di ClsStaticVariable."
+                );
+            }
+
+            bool shopFound = controllerShop.getShop2(shopID);
+
+            if (!shopFound || controllerShop.objShop == null)
+            {
+                throw new InvalidOperationException(
+                    "Shop dengan ShopID '" + shopID + "' tidak ditemukan."
+                );
+            }
+
+            if (!string.Equals(
+                controllerShop.objShop.ShopStatus,
+                "Active",
+                StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidOperationException(
+                    "Shop '" + shopID + "' tidak aktif."
+                );
+            }
+
+            ClsStaticVariable.CurrentShop = controllerShop.objShop;
+
+            lblShopID.Text =
+                ClsStaticVariable.CurrentShop.ShopID;
+
+            lblShopName.Text =
+                ClsStaticVariable.CurrentShop.ShopName;
+
+            lblMainProduct.Text =
+                ClsStaticVariable.CurrentShop.MainProduct;
+
+            lblAddress.Text =
+                ClsStaticVariable.CurrentShop.Address;
         }
 
         //SET HAK AKSES
@@ -127,12 +187,11 @@ namespace MilenialPark.Views
 
         private void btnExit_Click(object sender, EventArgs e)
         {
-            //BackUp 
+            isApplicationExiting = true;
+
             FrmBackUPDB frmBackUp = new FrmBackUPDB();
             frmBackUp.Show();
-            this.Focus();
             frmBackUp.btnBackUp_Click(null, null);
-            frmBackUp.Hide();
             frmBackUp.Close();
 
             Application.Exit();
@@ -191,27 +250,27 @@ namespace MilenialPark.Views
 
         private void btnLogOutG_Click(object sender, EventArgs e)
         {
-            this.Close();
+            ClsStaticVariable.CurrentShop = null;
+            Close();
         }
 
         private void Mainform_FormClosing(object sender, FormClosingEventArgs e)
         {
-            
+            if (isApplicationExiting)
+            {
+                return;
+            }
 
-            //try
-            //{
-            //    frmGatectrl.Show();
-            //    frmGatectrl.Close();
-            //}
-            //catch(Exception ex)
-            //{
-            //    Console.WriteLine(ex.Message);
-            //}
+            if (frmLogin == null || frmLogin.IsDisposed)
+            {
+                return;
+            }
 
-            frmLogin.txtUserID.Text = "";
-            frmLogin.txtpassword.Text = "";
+            frmLogin.txtUserID.Clear();
+            frmLogin.txtpassword.Clear();
+            frmLogin.Show();
+            frmLogin.Activate();
             frmLogin.txtUserID.Focus();
-            frmLogin.Show(); 
         }
 
         private void btnShop_Click(object sender, EventArgs e)
@@ -223,13 +282,24 @@ namespace MilenialPark.Views
 
         private void btnOrders_Click(object sender, EventArgs e)
         {
-            //Shop.FrmChooseShop frmchooseshop = new Shop.FrmChooseShop(this);
-            //frmchooseshop.Text = "Choose Shop";
-            //this.OpenChildForm(frmchooseshop);
-            controllerShop.getShop(ClsStaticVariable.controllerUser.objUser.UserID);
-            Transaction.FrmOrder frmOrder = new Transaction.FrmOrder(this, controllerShop.objShop);
+            if (ClsStaticVariable.CurrentShop == null)
+            {
+                ClsFungsi.Pesan(
+                    "Data shop aktif belum tersedia.",
+                    "INFO"
+                );
+
+                return;
+            }
+
+            Transaction.FrmOrder frmOrder =
+                new Transaction.FrmOrder(
+                    this,
+                    ClsStaticVariable.CurrentShop
+                );
+
             frmOrder.Text = "Order";
-            this.OpenChildForm(frmOrder);
+            OpenChildForm(frmOrder);
         }
 
         private void btnHistory_Click(object sender, EventArgs e)
