@@ -436,23 +436,79 @@ namespace MilenialPark.Controller
 
         }
 
-        public void getShopandShopItem2Union(string ShopID, string Category)
+        public bool getShopandShopItem2Union(
+    string shopID,
+    string category)
         {
-            this.getShop2(ShopID);
-            objShop.listShopitem = new List<ClsShopItem>();
-            query = "Select * from WHNPOS.dbo.GetUnionShopItem() where ShopID = " + ClsFungsi.C2Q(objShop.ShopID) + $" and TopUpAmount = 0 and Category != {ClsFungsi.C2Q(Category)}";
-            dt = ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(query);
-
-
-            if (dt.Rows.Count != 0)
+            if (string.IsNullOrWhiteSpace(shopID))
             {
-                foreach (DataRow row in dt.Rows)
-                {
-                    objShopItem = new ClsShopItem(row["ItemID"].ToString(), row["ShopID"].ToString(), row["ItemName"].ToString(), Convert.ToDecimal(row["Price"]), row["ItemDesc"].ToString(), 0, row["ImageFilePath"].ToString(), row["Category"].ToString(), Convert.ToDecimal(row["TopUpAmount"]), Convert.ToInt32(row["WaktuBermain"]), Convert.ToInt32(row["Toleransi"]));
-                    objShop.listShopitem.Add(objShopItem);
-                }
+                objShop = null;
+                return false;
             }
 
+            bool shopFound = getShop2(shopID);
+
+            if (!shopFound || objShop == null)
+            {
+                return false;
+            }
+
+            objShop.listShopitem =
+                new List<ClsShopItem>();
+
+            query =
+                "Select * " +
+                "from WHNPOS.dbo.GetUnionShopItem() " +
+                "where ShopID = " +
+                ClsFungsi.C2Q(shopID) + " " +
+                "and ISNULL(TopUpAmount, 0) = 0 " +
+                "and ISNULL(Category, '') <> " +
+                ClsFungsi.C2Q(category);
+
+            dt = ClsStaticVariable.objConnection
+                .objsqlconnection
+                .Filldatatable(query);
+
+            foreach (DataRow row in dt.Rows)
+            {
+                ClsShopItem item =
+                    new ClsShopItem(
+                        row["ItemID"].ToString(),
+                        row["ShopID"].ToString(),
+                        row["ItemName"].ToString(),
+
+                        row["Price"] == DBNull.Value
+                            ? 0
+                            : Convert.ToDecimal(row["Price"]),
+
+                        row["ItemDesc"].ToString(),
+                        0,
+                        row["ImageFilePath"].ToString(),
+                        row["Category"].ToString(),
+
+                        row["TopUpAmount"] == DBNull.Value
+                            ? 0
+                            : Convert.ToDecimal(
+                                row["TopUpAmount"]
+                            ),
+
+                        row["WaktuBermain"] == DBNull.Value
+                            ? 0
+                            : Convert.ToInt32(
+                                row["WaktuBermain"]
+                            ),
+
+                        row["Toleransi"] == DBNull.Value
+                            ? 0
+                            : Convert.ToInt32(
+                                row["Toleransi"]
+                            )
+                    );
+
+                objShop.listShopitem.Add(item);
+            }
+
+            return true;
         }
 
         public void getShopandShopItemTopUp(string UserID)
