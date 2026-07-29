@@ -146,5 +146,20 @@ namespace MilenialPark.Master
         {
             return (MessageBox.Show(Pesan, pertanyaan, MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes) ? true : false;
         }
+
+        public static string NormalizeCardID(string rawCardID)
+        {
+            if (string.IsNullOrWhiteSpace(rawCardID))
+                return "";
+
+            rawCardID = rawCardID.Trim();
+
+            if (!rawCardID.All(char.IsDigit))
+                return rawCardID;
+
+            string normalized = rawCardID.TrimStart('0');
+
+            return normalized.Length == 0 ? "0" : normalized;
+        }
     }
 }

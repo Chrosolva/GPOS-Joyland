@@ -12,6 +12,7 @@ namespace MilenialPark.Master
 {
     public class ClsStaticVariable
     {
+        // Joyland
         public static string DataBase = "WHNPOS";
         public static string server = "localhost";
         public static DBConnect objConnection = new DBConnect();
@@ -24,14 +25,15 @@ namespace MilenialPark.Master
         public static UCOrderItem ucOrderItem = new UCOrderItem();
         public static Mainform mainForm;
         public static bool sukses = false;
-        public static string ShopID = "";
+        public static string ShopID = "JOYLAND";
+        public static ClsShop CurrentShop;
         public static string CardID = "";
         public static string TransactionID = "";
         public static string currentID = "";
         public static ClsTransaction currenttrans;
         public static int WaktuBermain = 0;
         public static int Toleransi = 0;
-        public static string KodeBranch = "";
+        public static string KodeBranch = "BSTCMR";
 
         #region function
 

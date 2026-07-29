@@ -39,7 +39,7 @@ namespace MilenialPark.Views.Card
         public DataTable dt = new DataTable();
         PrintDialog printdialog1 = new PrintDialog();
         PrintDocument printdocument = new PrintDocument();
-        int CardID = 0;
+        private string CardID = "";
 
         #endregion
 
@@ -75,95 +75,116 @@ namespace MilenialPark.Views.Card
             }
         }
 
-        public void hasShop()
+        private bool ValidateUniversalShop()
         {
-            if (controllerShop.checkCashier(ClsStaticVariable.controllerUser.objUser.UserID))
+            if (ClsStaticVariable.CurrentShop == null)
             {
-                controllerShop.getShopandShopItemTopUp(ClsStaticVariable.controllerUser.objUser.UserID);
-                parentfrm.lblShopID.Visible = true;
-                parentfrm.lblShopName.Visible = true;
-                parentfrm.lblMainProduct.Visible = true;
-                parentfrm.lblAddress.Visible = true;
+                ClsFungsi.Pesan(
+                    "Data Universal Shop belum dimuat. Silakan logout dan login kembali.",
+                    "ERROR"
+                );
 
-                parentfrm.lblShopID.Text = controllerShop.objShop.ShopID;
-                parentfrm.lblShopName.Text = controllerShop.objShop.ShopName;
-                parentfrm.lblMainProduct.Text = controllerShop.objShop.MainProduct;
-                parentfrm.lblAddress.Text = controllerShop.objShop.Address;
-            }
-            else
-            {
-                ClsFungsi.Pesan("Maaf, akun anda belum memiliki data Toko / Shop !!! silahkan dibuat terlebih dahulu ", "ERROR");
                 close = true;
+                return false;
             }
-        }
 
-        public void hasShop2(string UserID)
-        {
-            if (controllerShop.checkCashier2(UserID))
+            if (string.IsNullOrWhiteSpace(ClsStaticVariable.CurrentShop.ShopID))
             {
-                controllerShop.getShopandShopItemTopUp(ClsStaticVariable.controllerUser.objUser.UserID);
-                parentfrm.lblShopID.Visible = true;
-                parentfrm.lblShopName.Visible = true;
-                parentfrm.lblMainProduct.Visible = true;
-                parentfrm.lblAddress.Visible = true;
+                ClsFungsi.Pesan(
+                    "ShopID Universal Shop tidak valid.",
+                    "ERROR"
+                );
 
-                parentfrm.lblShopID.Text = controllerShop.objShop.ShopID;
-                parentfrm.lblShopName.Text = controllerShop.objShop.ShopName;
-                parentfrm.lblMainProduct.Text = controllerShop.objShop.MainProduct;
-                parentfrm.lblAddress.Text = controllerShop.objShop.Address;
-            }
-            else
-            {
-                ClsFungsi.Pesan("Maaf, akun anda belum memiliki data Toko / Shop !!! silahkan dibuat terlebih dahulu ", "ERROR");
                 close = true;
+                return false;
             }
+
+            controllerShop.objShop = ClsStaticVariable.CurrentShop;
+            close = false;
+
+            return true;
         }
 
         public void setcbxJenisTopUp()
         {
             cbxJenisTopUp.Items.Clear();
-            dt = controllerShop.getShopItem(controllerShop.objShop.ShopID);
             cbxJenisTopUp.DisplayMember = "Text";
             cbxJenisTopUp.ValueMember = "Value";
-            int selected = 0;
-            if (dt.Rows.Count != 0)
-            {
-                for (int i = 0; i < dt.Rows.Count; i++)
-                {
 
-                    cbxJenisTopUp.Items.Add(new { Text = dt.Rows[i]["ItemName"].ToString(), Value = dt.Rows[i]["ItemID"].ToString() });
-                }
+            if (ClsStaticVariable.CurrentShop == null)
+            {
+                return;
             }
-            cbxJenisTopUp.SelectedIndex = selected;
+
+            dt = controllerShop.getTopUpItems(
+                ClsStaticVariable.CurrentShop.ShopID
+            );
+
+            foreach (DataRow row in dt.Rows)
+            {
+                cbxJenisTopUp.Items.Add(new
+                {
+                    Text = row["ItemName"].ToString(),
+                    Value = row["ItemID"].ToString()
+                });
+            }
+
+            if (cbxJenisTopUp.Items.Count > 0)
+            {
+                cbxJenisTopUp.SelectedIndex = 0;
+            }
+            else
+            {
+                btnTopUp.Enabled = false;
+
+                ClsFungsi.Pesan(
+                    "Item Top Up untuk shop '" +
+                    ClsStaticVariable.CurrentShop.ShopID +
+                    "' belum tersedia.",
+                    "INFO"
+                );
+            }
         }
 
         private void FrmCards_Load(object sender, EventArgs e)
         {
-            hasShop();
+            if (!ValidateUniversalShop())
+            {
+                BeginInvoke(new Action(Close));
+                return;
+            }
+
             setcbxJenisTopUp();
             txtCardID.Focus();
 
-            if (ClsStaticVariable.controllerUser.objUser.TipeUser == "Supervisor" || ClsStaticVariable.controllerUser.objUser.TipeUser == "Admin" || ClsStaticVariable.controllerUser.objUser.TipeUser == "SuperAdmin")
-            {
-                //btnRefund.Visible = true; 
-            }
-            else
+            string tipeUser =
+                ClsStaticVariable.controllerUser.objUser.TipeUser;
+
+            if (tipeUser != "Supervisor" &&
+                tipeUser != "Admin" &&
+                tipeUser != "SuperAdmin")
             {
                 btnRefund.Visible = false;
             }
 
-            if (ClsStaticVariable.controllerUser.objUser.TipeUser == "Staf")
+            if (tipeUser == "Staf")
             {
                 btnTopUp.Visible = false;
                 btnRefund.Visible = false;
                 TopUpPanel.Visible = false;
             }
 
-            parentfrm.btnFind.Click += this.HistorySearch;
-            parentfrm.txtSearch.TextChanged += this.HistorySearch;
+            parentfrm.btnFind.Click += HistorySearch;
+            parentfrm.txtSearch.TextChanged += HistorySearch;
+
+            parentfrm.cbxCategory.Items.Clear();
             parentfrm.cbxCategory.Items.Add("TransactionID");
             parentfrm.cbxCategory.SelectedIndex = 0;
-            cmbPaymentType.SelectedIndex = 0;
+
+            if (cmbPaymentType.Items.Count > 0)
+            {
+                cmbPaymentType.SelectedIndex = 0;
+            }
         }
 
         public void scan()
@@ -222,41 +243,176 @@ namespace MilenialPark.Views.Card
 
         private void txtCardID_KeyUp(object sender, KeyEventArgs e)
         {
-            if (!close)
+            if (close || e.KeyCode != Keys.Enter)
+                return;
+
+            e.SuppressKeyPress = true;
+
+            CardID = ClsFungsi.NormalizeCardID(txtCardID.Text);
+
+            if (string.IsNullOrWhiteSpace(CardID))
             {
-                if (e.KeyCode == Keys.Enter)
-                {
-                    CardID = Convert.ToInt32(txtCardID.Text);
-                    scan();
-                    calculatefinalbalance();
-                    txtCardID.Focus(); 
-                }
+                ClsFungsi.Pesan("Card ID belum diisi.");
+                return;
             }
+
+            txtCardID.Text = CardID;
+
+            scan();
+            calculatefinalbalance();
+            txtCardID.Focus();
         }
 
-        public void LoadCardList(object sender, EventArgs e, string CardID, DateTime from, DateTime to)
+        public void LoadCardList(
+    object sender,
+    EventArgs e,
+    string cardID,
+    DateTime from,
+    DateTime to)
         {
             FLCardTransList.Controls.Clear();
-            controllerCard.dt = controllerCard.getCardTransactHistory(controllerTran.objCard.CardID, new DateTime(from.Year, from.Month, from.Day, 0, 0, 0), new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
-            if (controllerCard.dt.Rows.Count != 0)
+
+            if (ClsStaticVariable.CurrentShop == null)
             {
-                UCCardTransList[] listucCardTranslist = new UCCardTransList[controllerCard.dt.Rows.Count];
-                int index = 0;
-                foreach (DataRow row in controllerCard.dt.Rows)
-                {
-                    controllerTran.objTransaction = new ClsTransaction(row["TransactionID"].ToString(), Convert.ToDateTime(row["TransactionDate"]), Convert.ToDecimal(row["TotalAmount"]), row["PaymentType"].ToString(), row["CardID"].ToString(), row["ShopID"].ToString(), row["Remarks"].ToString(), Convert.ToDecimal(row["Subtotal"]), Convert.ToDecimal(row["PPN"]), Convert.ToDecimal(row["InitialBalance"]), Convert.ToDecimal(row["FinalBalance"]));
-                    UCCardTransList ucCardTranList = new UCCardTransList(controllerTran.objTransaction);
-                    ucCardTranList.Name = "CH" + index.ToString();
-
-                    ucCardTranList.btnDetails.Click += (se, ev) => this.DetailsClick(sender, e, ucCardTranList.objtrans);
-                    ucCardTranList.btnReceipt.Click += (se, ev) => this.ReceiptClick(sender, e, ucCardTranList.objtrans);
-                    ucCardTranList.btnPrint.Click += (se, ev) => this.PrintClick(sender, e, ucCardTranList.objtrans);
-                    listucCardTranslist[index] = ucCardTranList;
-                    index++;
-                }
-
-                FLCardTransList.Controls.AddRange(listucCardTranslist);
+                return;
             }
+
+            controllerCard.dt =
+                controllerCard.getCardTransactHistoryWithShopID(
+                    ClsStaticVariable.CurrentShop.ShopID,
+                    cardID,
+                    new DateTime(
+                        from.Year,
+                        from.Month,
+                        from.Day,
+                        0,
+                        0,
+                        0
+                    ),
+                    new DateTime(
+                        to.Year,
+                        to.Month,
+                        to.Day,
+                        23,
+                        59,
+                        59
+                    )
+                );
+
+            if (controllerCard.dt.Rows.Count == 0)
+            {
+                return;
+            }
+
+            UCCardTransList[] controls =
+                new UCCardTransList[
+                    controllerCard.dt.Rows.Count
+                ];
+
+            int index = 0;
+
+            foreach (DataRow row in controllerCard.dt.Rows)
+            {
+                ClsTransaction transaction =
+                    new ClsTransaction(
+                        GetString(row, "TransactionID"),
+                        GetDateTime(row, "TransactionDate"),
+                        GetDecimal(row, "TotalAmount"),
+                        GetString(row, "PaymentType"),
+                        GetString(row, "CardID"),
+                        GetString(row, "ShopID"),
+                        GetString(row, "Remarks"),
+                        GetDecimal(row, "Subtotal"),
+                        GetDecimal(row, "PPN"),
+                        GetDecimal(row, "InitialBalance"),
+                        GetDecimal(row, "FinalBalance")
+                    );
+
+                controllerTran.objTransaction = transaction;
+
+                UCCardTransList history =
+                    new UCCardTransList(transaction);
+
+                history.Name = "CH" + index;
+
+                history.btnDetails.Click +=
+                    (se, ev) =>
+                        DetailsClick(
+                            se,
+                            ev,
+                            history.objtrans
+                        );
+
+                history.btnReceipt.Click +=
+                    (se, ev) =>
+                        ReceiptClick(
+                            se,
+                            ev,
+                            history.objtrans
+                        );
+
+                history.btnPrint.Click +=
+                    (se, ev) =>
+                        PrintClick(
+                            se,
+                            ev,
+                            history.objtrans
+                        );
+
+                controls[index] = history;
+                index++;
+            }
+
+            FLCardTransList.Controls.AddRange(controls);
+        }
+
+        private static string GetString(DataRow row, string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName) ||
+                row.IsNull(columnName))
+            {
+                return "";
+            }
+
+            return row[columnName].ToString();
+        }
+
+        private static decimal GetDecimal(DataRow row, string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName) ||
+                row.IsNull(columnName))
+            {
+                return 0;
+            }
+
+            decimal result;
+
+            return decimal.TryParse(
+                row[columnName].ToString(),
+                out result
+            )
+                ? result
+                : 0;
+        }
+
+        private static DateTime GetDateTime(
+            DataRow row,
+            string columnName)
+        {
+            if (!row.Table.Columns.Contains(columnName) ||
+                row.IsNull(columnName))
+            {
+                return DateTime.MinValue;
+            }
+
+            DateTime result;
+
+            return DateTime.TryParse(
+                row[columnName].ToString(),
+                out result
+            )
+                ? result
+                : DateTime.MinValue;
         }
 
         public void DetailsClick(object sender, EventArgs e, ClsTransaction trans)
@@ -405,43 +561,140 @@ namespace MilenialPark.Views.Card
 
         private void btnTopUp_Click(object sender, EventArgs e)
         {
-            if (!close)
+            if (close)
             {
-                if (txtCardID.Text.Length == 0)
-                {
-                    ClsFungsi.Pesan("Silahkan Scan Card / Kartu Terlebih Dahulu !!!");
-                }
-                else if (!controllerCard.CheckCard2(CardID.ToString()))
-                {
-                    ClsFungsi.Pesan("Card / Kartu yang di scan tidak terdaftar pada sistem atau sudah di blokir !!!");
-                }
-                else if (controllerCard.CheckCard2(CardID.ToString()))
-                {
-                    scan2();
-                    //get shop and shopItem top Up 
-                    controllerShop.getShopandShopItemTopUp2(ClsStaticVariable.controllerUser.objUser.UserID, Convert.ToString((cbxJenisTopUp.SelectedItem as dynamic).Value));
-
-                    // set transaction Details
-                    ClsTransactionDetail objtransdet = new ClsTransactionDetail("TOPUPTMP", DateTime.Now, controllerShop.objShop.listShopitem[0].ItemID, controllerShop.objShop.listShopitem[0].ItemName, controllerShop.objShop.listShopitem[0].Price, 1, "COMPLETE");
-
-                    // set Transaction
-                    controllerTran.AutogenereateTransactionID("KREDIT", parentfrm.lblShopID.Text);
-                    controllerTran.objTransaction = new ClsTransaction(controllerTran.TransactionID, DateTime.Now, NUDTotalAmount.Value, cmbPaymentType.Text, controllerTran.objCard.CardID, parentfrm.lblShopID.Text, ("TOP UP " + NUDTotalAmount.Value.ToString("#,##0") + " to " + controllerTran.objCard.CardID + " By " + cmbPaymentType.Text), Convert.ToDecimal(lblPaymentValue.Text), 0, controllerTran.objCard.Saldo, finalbalance, "COMPLETE", "TOP-UP");
-
-                    controllerTran.objTransaction.listtransdet = new List<ClsTransactionDetail>();
-                    objtransdet.TransactionID = controllerTran.objTransaction.TransactionID;
-                    objtransdet.Price = Convert.ToDecimal(lblPaymentValue.Text);
-                    controllerTran.objTransaction.listtransdet.Add(objtransdet);
-
-                    //Insert 
-                    //Insert Transaksi
-                    ClsFungsi.Pesan(controllerTran.InsertTopUp(controllerTran.objTransaction, controllerTran.objCard), "INFO");
-                    cbxJenisTopUp.SelectedIndex = 0;
-                    txtCardID.Focus();
-                    scan();
-
-                }
+                return;
             }
+
+            if (string.IsNullOrWhiteSpace(txtCardID.Text))
+            {
+                ClsFungsi.Pesan(
+                    "Silahkan Scan Card / Kartu Terlebih Dahulu !!!"
+                );
+
+                return;
+            }
+
+            if (!controllerCard.CheckCard2(txtCardID.Text.Trim()))
+            {
+                ClsFungsi.Pesan(
+                    "Card / Kartu yang di-scan tidak terdaftar " +
+                    "pada sistem atau sudah diblokir !!!"
+                );
+
+                return;
+            }
+
+            if (cbxJenisTopUp.SelectedItem == null)
+            {
+                ClsFungsi.Pesan(
+                    "Jenis Top Up belum dipilih."
+                );
+
+                return;
+            }
+
+            if (ClsStaticVariable.CurrentShop == null)
+            {
+                ClsFungsi.Pesan(
+                    "Universal Shop belum tersedia.",
+                    "ERROR"
+                );
+
+                return;
+            }
+
+            scan2();
+
+            string itemID = Convert.ToString(
+                (cbxJenisTopUp.SelectedItem as dynamic).Value
+            );
+
+            ClsShopItem topUpItem =
+                controllerShop.getShopItemByID(
+                    ClsStaticVariable.CurrentShop.ShopID,
+                    itemID
+                );
+
+            if (topUpItem == null)
+            {
+                ClsFungsi.Pesan(
+                    "Item Top Up tidak ditemukan.",
+                    "ERROR"
+                );
+
+                return;
+            }
+
+            ClsTransactionDetail objtransdet =
+                new ClsTransactionDetail(
+                    "TOPUPTMP",
+                    DateTime.Now,
+                    topUpItem.ItemID,
+                    topUpItem.ItemName,
+                    topUpItem.Price,
+                    1,
+                    "COMPLETE"
+                );
+
+            string shopID =
+                ClsStaticVariable.CurrentShop.ShopID;
+
+            controllerTran.AutogenereateTransactionID(
+                "KREDIT",
+                shopID
+            );
+
+            controllerTran.objTransaction =
+                new ClsTransaction(
+                    controllerTran.TransactionID,
+                    DateTime.Now,
+                    NUDTotalAmount.Value,
+                    cmbPaymentType.Text,
+                    controllerTran.objCard.CardID,
+                    shopID,
+                    "TOP UP " +
+                    NUDTotalAmount.Value.ToString("#,##0") +
+                    " to " +
+                    controllerTran.objCard.CardID +
+                    " By " +
+                    cmbPaymentType.Text,
+                    Convert.ToDecimal(lblPaymentValue.Text),
+                    0,
+                    controllerTran.objCard.Saldo,
+                    finalbalance,
+                    "COMPLETE",
+                    "TOP-UP"
+                );
+
+            controllerTran.objTransaction.listtransdet =
+                new List<ClsTransactionDetail>();
+
+            objtransdet.TransactionID =
+                controllerTran.objTransaction.TransactionID;
+
+            objtransdet.Price =
+                Convert.ToDecimal(lblPaymentValue.Text);
+
+            controllerTran.objTransaction.listtransdet.Add(
+                objtransdet
+            );
+
+            ClsFungsi.Pesan(
+                controllerTran.InsertTopUp(
+                    controllerTran.objTransaction,
+                    controllerTran.objCard
+                ),
+                "INFO"
+            );
+
+            if (cbxJenisTopUp.Items.Count > 0)
+            {
+                cbxJenisTopUp.SelectedIndex = 0;
+            }
+
+            txtCardID.Focus();
+            scan();
         }
 
         private void NUDQty_ValueChanged(object sender, EventArgs e)
@@ -474,16 +727,29 @@ namespace MilenialPark.Views.Card
 
 
                         //get shop and shopItem top Up 
-                        controllerShop.getShopandShopItemRefund(ClsStaticVariable.controllerUser.objUser.UserID);
+                        //controllerShop.getShopandShopItemRefund(ClsStaticVariable.controllerUser.objUser.UserID);
+                        ClsShopItem refundItem = controllerShop.getRefundItem(ClsStaticVariable.CurrentShop.ShopID);
 
-                        if (controllerShop.checkcanrefund(controllerShop.objShop.ShopID))
+                        if (refundItem == null)
+                        {
+                            ClsFungsi.Pesan(
+                                "Universal Shop tidak memiliki item REFUND."
+                            );
+
+                            return;
+                        }
+
+                        string shopID = ClsStaticVariable.CurrentShop.ShopID;
+
+                        if (controllerShop.checkcanrefund(shopID))
                         {
                             // set transaction Details
-                            ClsTransactionDetail objtransdet = new ClsTransactionDetail("REFUNDTMP", DateTime.Now, controllerShop.objShop.listShopitem[0].ItemID, controllerShop.objShop.listShopitem[0].ItemName, controllerShop.objShop.listShopitem[0].Price, 1, "COMPLETE");
+                            ClsTransactionDetail objtransdet = new ClsTransactionDetail("REFUNDTMP", DateTime.Now, refundItem.ItemID, refundItem.ItemName, refundItem.Price, 1, "COMPLETE");
 
+                            
                             // set Transaction
-                            controllerTran.AutogenereateTransactionID("REFUND", parentfrm.lblShopID.Text);
-                            controllerTran.objTransaction = new ClsTransaction(controllerTran.TransactionID, DateTime.Now, NUDTotalAmount.Value, "REFUND", controllerTran.objCard.CardID, parentfrm.lblShopID.Text, ("REFUND " + NUDTotalAmount.Value.ToString("#,##0") + " From " + controllerTran.objCard.CardID), 0, 0, controllerTran.objCard.Saldo, finalbalance, "COMPLETE", "REFUND");
+                            controllerTran.AutogenereateTransactionID("REFUND", shopID);
+                            controllerTran.objTransaction = new ClsTransaction(controllerTran.TransactionID, DateTime.Now, NUDTotalAmount.Value, "REFUND", controllerTran.objCard.CardID, shopID, ("REFUND " + NUDTotalAmount.Value.ToString("#,##0") + " From " + controllerTran.objCard.CardID), 0, 0, controllerTran.objCard.Saldo, finalbalance, "COMPLETE", "REFUND");
 
                             controllerTran.objTransaction.listtransdet = new List<ClsTransactionDetail>();
                             objtransdet.TransactionID = controllerTran.objTransaction.TransactionID;
@@ -532,29 +798,28 @@ namespace MilenialPark.Views.Card
             //    SendKeys.SendWait("{ENTER}");
             //}
 
-            FrmChooseShop frmChooseShop = new FrmChooseShop();
-            frmChooseShop.ShowDialog();
+            //FrmChooseShop frmChooseShop = new FrmChooseShop();
+            //frmChooseShop.ShowDialog();
 
-            if (ClsStaticVariable.ShopID.Trim().Length > 0)
-            {
-                controllerShop.getcashier2(ClsStaticVariable.ShopID);
-                if (controllerShop.objShop.ShopName.Trim().Length > 0)
-                {
-                    parentfrm.lblShopID.Visible = true;
-                    parentfrm.lblShopName.Visible = true;
-                    parentfrm.lblMainProduct.Visible = true;
-                    parentfrm.lblAddress.Visible = true;
+            //if (ClsStaticVariable.ShopID.Trim().Length > 0)
+            //{
+            //    controllerShop.getcashier2(ClsStaticVariable.ShopID);
+            //    if (controllerShop.objShop.ShopName.Trim().Length > 0)
+            //    {
+            //        parentfrm.lblShopID.Visible = true;
+            //        parentfrm.lblShopName.Visible = true;
+            //        parentfrm.lblMainProduct.Visible = true;
+            //        parentfrm.lblAddress.Visible = true;
 
-                    parentfrm.lblShopID.Text = controllerShop.objShop.ShopID;
-                    parentfrm.lblShopName.Text = controllerShop.objShop.ShopName;
-                    parentfrm.lblMainProduct.Text = controllerShop.objShop.MainProduct;
-                    parentfrm.lblAddress.Text = controllerShop.objShop.Address;
+            //        parentfrm.lblShopID.Text = controllerShop.objShop.ShopID;
+            //        parentfrm.lblShopName.Text = controllerShop.objShop.ShopName;
+            //        parentfrm.lblMainProduct.Text = controllerShop.objShop.MainProduct;
+            //        parentfrm.lblAddress.Text = controllerShop.objShop.Address;
                     
-                    //btnImport.Enabled = true;
-                }
-            }
-            hasShop2(controllerShop.objShop.ShopID);
-            setcbxJenisTopUp(); 
+            //        //btnImport.Enabled = true;
+            //    }
+            //}
+            //setcbxJenisTopUp(); 
 
         }
 
@@ -604,16 +869,28 @@ namespace MilenialPark.Views.Card
 
 
                         //get shop and shopItem top Up 
-                        controllerShop.getShopandShopItemRefund(ClsStaticVariable.controllerUser.objUser.UserID);
+                        //controllerShop.getShopandShopItemRefund(ClsStaticVariable.controllerUser.objUser.UserID);
+                        ClsShopItem refundItem = controllerShop.getRefundItem(ClsStaticVariable.CurrentShop.ShopID);
 
-                        if (controllerShop.checkcanrefund(controllerShop.objShop.ShopID))
+                        if (refundItem == null)
+                        {
+                            ClsFungsi.Pesan(
+                                "Universal Shop tidak memiliki item REFUND."
+                            );
+
+                            return;
+                        }
+
+                        string shopID = ClsStaticVariable.CurrentShop.ShopID;
+
+                        if (controllerShop.checkcanrefund(shopID))
                         {
                             // set transaction Details
-                            ClsTransactionDetail objtransdet = new ClsTransactionDetail("REFUNDTMP", DateTime.Now, controllerShop.objShop.listShopitem[0].ItemID, controllerShop.objShop.listShopitem[0].ItemName, controllerShop.objShop.listShopitem[0].Price, 1, "COMPLETE");
+                            ClsTransactionDetail objtransdet = new ClsTransactionDetail("REFUNDTMP", DateTime.Now, refundItem.ItemID, refundItem.ItemName, refundItem.Price, 1, "COMPLETE");
 
                             // set Transaction
-                            controllerTran.AutogenereateTransactionID("REFUND", parentfrm.lblShopID.Text);
-                            controllerTran.objTransaction = new ClsTransaction(controllerTran.TransactionID, DateTime.Now, controllerTran.objCard.Saldo, "REFUND", controllerTran.objCard.CardID, parentfrm.lblShopID.Text, ("BLOCK CARD, REFUND " + controllerTran.objCard.Saldo.ToString("#,##0") + " From " + controllerTran.objCard.CardID), 0, 0, controllerTran.objCard.Saldo, finalbalance, "COMPLETE");
+                            controllerTran.AutogenereateTransactionID("REFUND", shopID);
+                            controllerTran.objTransaction = new ClsTransaction(controllerTran.TransactionID, DateTime.Now, controllerTran.objCard.Saldo, "REFUND", controllerTran.objCard.CardID, shopID, ("BLOCK CARD, REFUND " + controllerTran.objCard.Saldo.ToString("#,##0") + " From " + controllerTran.objCard.CardID), 0, 0, controllerTran.objCard.Saldo, finalbalance, "COMPLETE");
 
                             controllerTran.objTransaction.listtransdet = new List<ClsTransactionDetail>();
                             objtransdet.TransactionID = controllerTran.objTransaction.TransactionID;
@@ -645,11 +922,45 @@ namespace MilenialPark.Views.Card
             this.Close();
         }
 
-        private void cbxJenisTopUp_SelectedIndexChanged(object sender, EventArgs e)
+        private void cbxJenisTopUp_SelectedIndexChanged(
+    object sender,
+    EventArgs e)
         {
-            dt = controllerShop.getOneShopItem(controllerShop.objShop.ShopID, Convert.ToString((cbxJenisTopUp.SelectedItem as dynamic).Value));
-            NUDTotalAmount.Value = Convert.ToDecimal(dt.Rows[0]["TopUpAmount"]);
-            lblPaymentValue.Text = Convert.ToDecimal(dt.Rows[0]["Price"]).ToString("#,##0");
+            if (cbxJenisTopUp.SelectedItem == null ||
+                ClsStaticVariable.CurrentShop == null)
+            {
+                return;
+            }
+
+            string itemID = Convert.ToString(
+                (cbxJenisTopUp.SelectedItem as dynamic).Value
+            );
+
+            dt = controllerShop.getOneShopItem(
+                ClsStaticVariable.CurrentShop.ShopID,
+                itemID
+            );
+
+            if (dt.Rows.Count == 0)
+            {
+                NUDTotalAmount.Value = 0;
+                lblPaymentValue.Text = "0";
+                return;
+            }
+
+            decimal topUpAmount =
+                dt.Rows[0]["TopUpAmount"] == DBNull.Value
+                    ? 0
+                    : Convert.ToDecimal(dt.Rows[0]["TopUpAmount"]);
+
+            decimal price =
+                dt.Rows[0]["Price"] == DBNull.Value
+                    ? 0
+                    : Convert.ToDecimal(dt.Rows[0]["Price"]);
+
+            NUDTotalAmount.Value = topUpAmount;
+            lblPaymentValue.Text = price.ToString("#,##0");
+
             calculatefinalbalance();
         }
 
@@ -698,5 +1009,7 @@ namespace MilenialPark.Views.Card
                 }
             }
         }
+
+        
     }
 }
