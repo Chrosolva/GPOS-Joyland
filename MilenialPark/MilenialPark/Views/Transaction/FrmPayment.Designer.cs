@@ -32,7 +32,10 @@
             this.panel1 = new System.Windows.Forms.Panel();
             this.lblFormTitle = new System.Windows.Forms.Label();
             this.panel2 = new System.Windows.Forms.Panel();
+            this.label12 = new System.Windows.Forms.Label();
+            this.cbxTransType = new System.Windows.Forms.ComboBox();
             this.cbxRemarks = new System.Windows.Forms.ComboBox();
+            this.btnSave = new System.Windows.Forms.Button();
             this.txtRemarks = new System.Windows.Forms.TextBox();
             this.label5 = new System.Windows.Forms.Label();
             this.lblCardBalance = new System.Windows.Forms.Label();
@@ -47,11 +50,27 @@
             this.lblCustomerName = new System.Windows.Forms.Label();
             this.label1 = new System.Windows.Forms.Label();
             this.lblCardID2 = new System.Windows.Forms.Label();
-            this.btnSave = new System.Windows.Forms.Button();
-            this.label12 = new System.Windows.Forms.Label();
-            this.cbxTransType = new System.Windows.Forms.ComboBox();
+            this.txtKeterangan = new System.Windows.Forms.TextBox();
+            this.label8 = new System.Windows.Forms.Label();
+            this.txtRFIDScan = new System.Windows.Forms.TextBox();
+            this.label7 = new System.Windows.Forms.Label();
+            this.dgvTransaksiDetail = new System.Windows.Forms.DataGridView();
+            this.dataGridViewTextBoxColumn1 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn3 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn4 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Price2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Qty2 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn7 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn8 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn9 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn10 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn11 = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.dataGridViewTextBoxColumn12 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.dgvTransacTiketDet = new System.Windows.Forms.DataGridView();
             this.TransactionID = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.RFID = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.Keterangan = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.TransactionDate = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ItemID = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.ItemName = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -63,8 +82,10 @@
             this.JamKeluar = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.WaktuBermain = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Toleransi = new System.Windows.Forms.DataGridViewTextBoxColumn();
+            this.TagID = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.panel1.SuspendLayout();
             this.panel2.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTransaksiDetail)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTransacTiketDet)).BeginInit();
             this.SuspendLayout();
             // 
@@ -75,7 +96,7 @@
             this.panel1.Dock = System.Windows.Forms.DockStyle.Top;
             this.panel1.Location = new System.Drawing.Point(0, 0);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(1266, 51);
+            this.panel1.Size = new System.Drawing.Size(1332, 51);
             this.panel1.TabIndex = 7;
             // 
             // lblFormTitle
@@ -91,7 +112,12 @@
             // panel2
             // 
             this.panel2.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(244)))), ((int)(((byte)(246)))), ((int)(((byte)(250)))));
+            this.panel2.Controls.Add(this.dgvTransaksiDetail);
             this.panel2.Controls.Add(this.dgvTransacTiketDet);
+            this.panel2.Controls.Add(this.txtKeterangan);
+            this.panel2.Controls.Add(this.label8);
+            this.panel2.Controls.Add(this.txtRFIDScan);
+            this.panel2.Controls.Add(this.label7);
             this.panel2.Controls.Add(this.label12);
             this.panel2.Controls.Add(this.cbxTransType);
             this.panel2.Controls.Add(this.cbxRemarks);
@@ -113,8 +139,31 @@
             this.panel2.Dock = System.Windows.Forms.DockStyle.Fill;
             this.panel2.Location = new System.Drawing.Point(0, 51);
             this.panel2.Name = "panel2";
-            this.panel2.Size = new System.Drawing.Size(1266, 456);
+            this.panel2.Size = new System.Drawing.Size(1332, 485);
             this.panel2.TabIndex = 8;
+            // 
+            // label12
+            // 
+            this.label12.AutoSize = true;
+            this.label12.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label12.Location = new System.Drawing.Point(17, 73);
+            this.label12.Name = "label12";
+            this.label12.Size = new System.Drawing.Size(121, 21);
+            this.label12.TabIndex = 95;
+            this.label12.Text = "TransactionType";
+            // 
+            // cbxTransType
+            // 
+            this.cbxTransType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbxTransType.Font = new System.Drawing.Font("Segoe UI Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbxTransType.FormattingEnabled = true;
+            this.cbxTransType.Items.AddRange(new object[] {
+            "WEEKDAY",
+            "WEEKEND"});
+            this.cbxTransType.Location = new System.Drawing.Point(144, 70);
+            this.cbxTransType.Name = "cbxTransType";
+            this.cbxTransType.Size = new System.Drawing.Size(205, 29);
+            this.cbxTransType.TabIndex = 94;
             // 
             // cbxRemarks
             // 
@@ -131,6 +180,22 @@
             this.cbxRemarks.Size = new System.Drawing.Size(104, 29);
             this.cbxRemarks.TabIndex = 93;
             this.cbxRemarks.SelectedIndexChanged += new System.EventHandler(this.cbxRemarks_SelectedIndexChanged);
+            // 
+            // btnSave
+            // 
+            this.btnSave.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
+            this.btnSave.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.btnSave.ForeColor = System.Drawing.Color.OrangeRed;
+            this.btnSave.Image = ((System.Drawing.Image)(resources.GetObject("btnSave.Image")));
+            this.btnSave.ImageAlign = System.Drawing.ContentAlignment.BottomLeft;
+            this.btnSave.Location = new System.Drawing.Point(88, 352);
+            this.btnSave.Name = "btnSave";
+            this.btnSave.Padding = new System.Windows.Forms.Padding(7);
+            this.btnSave.Size = new System.Drawing.Size(169, 54);
+            this.btnSave.TabIndex = 89;
+            this.btnSave.Text = "Save";
+            this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // txtRemarks
             // 
@@ -277,51 +342,139 @@
             this.lblCardID2.TabIndex = 46;
             this.lblCardID2.Text = "Card ID";
             // 
-            // btnSave
+            // txtKeterangan
             // 
-            this.btnSave.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Zoom;
-            this.btnSave.Font = new System.Drawing.Font("Segoe UI Semibold", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.btnSave.ForeColor = System.Drawing.Color.OrangeRed;
-            this.btnSave.Image = ((System.Drawing.Image)(resources.GetObject("btnSave.Image")));
-            this.btnSave.ImageAlign = System.Drawing.ContentAlignment.BottomLeft;
-            this.btnSave.Location = new System.Drawing.Point(88, 352);
-            this.btnSave.Name = "btnSave";
-            this.btnSave.Padding = new System.Windows.Forms.Padding(7);
-            this.btnSave.Size = new System.Drawing.Size(169, 54);
-            this.btnSave.TabIndex = 89;
-            this.btnSave.Text = "Save";
-            this.btnSave.UseVisualStyleBackColor = true;
-            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
+            this.txtKeterangan.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtKeterangan.Font = new System.Drawing.Font("Segoe UI Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtKeterangan.Location = new System.Drawing.Point(566, 15);
+            this.txtKeterangan.Name = "txtKeterangan";
+            this.txtKeterangan.Size = new System.Drawing.Size(190, 29);
+            this.txtKeterangan.TabIndex = 107;
             // 
-            // label12
+            // label8
             // 
-            this.label12.AutoSize = true;
-            this.label12.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label12.Location = new System.Drawing.Point(17, 73);
-            this.label12.Name = "label12";
-            this.label12.Size = new System.Drawing.Size(121, 21);
-            this.label12.TabIndex = 95;
-            this.label12.Text = "TransactionType";
+            this.label8.AutoSize = true;
+            this.label8.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label8.Location = new System.Drawing.Point(461, 17);
+            this.label8.Name = "label8";
+            this.label8.Size = new System.Drawing.Size(89, 21);
+            this.label8.TabIndex = 106;
+            this.label8.Text = "Keterangan";
             // 
-            // cbxTransType
+            // txtRFIDScan
             // 
-            this.cbxTransType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbxTransType.Font = new System.Drawing.Font("Segoe UI Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cbxTransType.FormattingEnabled = true;
-            this.cbxTransType.Items.AddRange(new object[] {
-            "WEEKDAY",
-            "WEEKEND"});
-            this.cbxTransType.Location = new System.Drawing.Point(144, 70);
-            this.cbxTransType.Name = "cbxTransType";
-            this.cbxTransType.Size = new System.Drawing.Size(205, 29);
-            this.cbxTransType.TabIndex = 94;
+            this.txtRFIDScan.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtRFIDScan.Font = new System.Drawing.Font("Segoe UI Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtRFIDScan.Location = new System.Drawing.Point(856, 15);
+            this.txtRFIDScan.Name = "txtRFIDScan";
+            this.txtRFIDScan.Size = new System.Drawing.Size(190, 29);
+            this.txtRFIDScan.TabIndex = 105;
+            // 
+            // label7
+            // 
+            this.label7.AutoSize = true;
+            this.label7.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label7.Location = new System.Drawing.Point(770, 17);
+            this.label7.Name = "label7";
+            this.label7.Size = new System.Drawing.Size(80, 21);
+            this.label7.TabIndex = 104;
+            this.label7.Text = "RFID Scan";
+            // 
+            // dgvTransaksiDetail
+            // 
+            this.dgvTransaksiDetail.AllowUserToDeleteRows = false;
+            this.dgvTransaksiDetail.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.dgvTransaksiDetail.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            this.dgvTransaksiDetail.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
+            this.dataGridViewTextBoxColumn1,
+            this.dataGridViewTextBoxColumn2,
+            this.dataGridViewTextBoxColumn3,
+            this.dataGridViewTextBoxColumn4,
+            this.Price2,
+            this.Qty2,
+            this.dataGridViewTextBoxColumn7,
+            this.dataGridViewTextBoxColumn8,
+            this.dataGridViewTextBoxColumn9,
+            this.dataGridViewTextBoxColumn10,
+            this.dataGridViewTextBoxColumn11,
+            this.dataGridViewTextBoxColumn12});
+            this.dgvTransaksiDetail.Location = new System.Drawing.Point(465, 276);
+            this.dgvTransaksiDetail.Name = "dgvTransaksiDetail";
+            this.dgvTransaksiDetail.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            this.dgvTransaksiDetail.Size = new System.Drawing.Size(855, 184);
+            this.dgvTransaksiDetail.TabIndex = 109;
+            // 
+            // dataGridViewTextBoxColumn1
+            // 
+            this.dataGridViewTextBoxColumn1.HeaderText = "TransactionID";
+            this.dataGridViewTextBoxColumn1.Name = "dataGridViewTextBoxColumn1";
+            // 
+            // dataGridViewTextBoxColumn2
+            // 
+            this.dataGridViewTextBoxColumn2.HeaderText = "TransactionDate";
+            this.dataGridViewTextBoxColumn2.Name = "dataGridViewTextBoxColumn2";
+            // 
+            // dataGridViewTextBoxColumn3
+            // 
+            this.dataGridViewTextBoxColumn3.HeaderText = "ItemID";
+            this.dataGridViewTextBoxColumn3.Name = "dataGridViewTextBoxColumn3";
+            // 
+            // dataGridViewTextBoxColumn4
+            // 
+            this.dataGridViewTextBoxColumn4.HeaderText = "ItemName";
+            this.dataGridViewTextBoxColumn4.Name = "dataGridViewTextBoxColumn4";
+            // 
+            // Price2
+            // 
+            this.Price2.HeaderText = "Price";
+            this.Price2.Name = "Price2";
+            // 
+            // Qty2
+            // 
+            this.Qty2.HeaderText = "Qty";
+            this.Qty2.Name = "Qty2";
+            // 
+            // dataGridViewTextBoxColumn7
+            // 
+            this.dataGridViewTextBoxColumn7.HeaderText = "NoUrut";
+            this.dataGridViewTextBoxColumn7.Name = "dataGridViewTextBoxColumn7";
+            // 
+            // dataGridViewTextBoxColumn8
+            // 
+            this.dataGridViewTextBoxColumn8.HeaderText = "OrderStatus";
+            this.dataGridViewTextBoxColumn8.Name = "dataGridViewTextBoxColumn8";
+            // 
+            // dataGridViewTextBoxColumn9
+            // 
+            this.dataGridViewTextBoxColumn9.HeaderText = "JamMasuk";
+            this.dataGridViewTextBoxColumn9.Name = "dataGridViewTextBoxColumn9";
+            // 
+            // dataGridViewTextBoxColumn10
+            // 
+            this.dataGridViewTextBoxColumn10.HeaderText = "JamKeluar";
+            this.dataGridViewTextBoxColumn10.Name = "dataGridViewTextBoxColumn10";
+            // 
+            // dataGridViewTextBoxColumn11
+            // 
+            this.dataGridViewTextBoxColumn11.HeaderText = "WaktuBermain";
+            this.dataGridViewTextBoxColumn11.Name = "dataGridViewTextBoxColumn11";
+            // 
+            // dataGridViewTextBoxColumn12
+            // 
+            this.dataGridViewTextBoxColumn12.HeaderText = "Toleransi";
+            this.dataGridViewTextBoxColumn12.Name = "dataGridViewTextBoxColumn12";
             // 
             // dgvTransacTiketDet
             // 
             this.dgvTransacTiketDet.AllowUserToDeleteRows = false;
+            this.dgvTransacTiketDet.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.dgvTransacTiketDet.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             this.dgvTransacTiketDet.Columns.AddRange(new System.Windows.Forms.DataGridViewColumn[] {
             this.TransactionID,
+            this.RFID,
+            this.Keterangan,
             this.TransactionDate,
             this.ItemID,
             this.ItemName,
@@ -332,17 +485,30 @@
             this.JamMasuk,
             this.JamKeluar,
             this.WaktuBermain,
-            this.Toleransi});
-            this.dgvTransacTiketDet.Location = new System.Drawing.Point(402, 15);
+            this.Toleransi,
+            this.TagID});
+            this.dgvTransacTiketDet.EditMode = System.Windows.Forms.DataGridViewEditMode.EditOnEnter;
+            this.dgvTransacTiketDet.Location = new System.Drawing.Point(465, 59);
             this.dgvTransacTiketDet.Name = "dgvTransacTiketDet";
             this.dgvTransacTiketDet.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
-            this.dgvTransacTiketDet.Size = new System.Drawing.Size(824, 402);
-            this.dgvTransacTiketDet.TabIndex = 96;
+            this.dgvTransacTiketDet.Size = new System.Drawing.Size(855, 211);
+            this.dgvTransacTiketDet.TabIndex = 108;
             // 
             // TransactionID
             // 
             this.TransactionID.HeaderText = "TransactionID";
             this.TransactionID.Name = "TransactionID";
+            // 
+            // RFID
+            // 
+            this.RFID.HeaderText = "RFID";
+            this.RFID.Name = "RFID";
+            this.RFID.ReadOnly = true;
+            // 
+            // Keterangan
+            // 
+            this.Keterangan.HeaderText = "Keterangan";
+            this.Keterangan.Name = "Keterangan";
             // 
             // TransactionDate
             // 
@@ -399,11 +565,16 @@
             this.Toleransi.HeaderText = "Toleransi";
             this.Toleransi.Name = "Toleransi";
             // 
+            // TagID
+            // 
+            this.TagID.HeaderText = "TagID";
+            this.TagID.Name = "TagID";
+            // 
             // FrmPayment
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1266, 507);
+            this.ClientSize = new System.Drawing.Size(1332, 536);
             this.Controls.Add(this.panel2);
             this.Controls.Add(this.panel1);
             this.Name = "FrmPayment";
@@ -413,6 +584,7 @@
             this.panel1.PerformLayout();
             this.panel2.ResumeLayout(false);
             this.panel2.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.dgvTransaksiDetail)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTransacTiketDet)).EndInit();
             this.ResumeLayout(false);
 
@@ -441,8 +613,23 @@
         public System.Windows.Forms.ComboBox cbxRemarks;
         public System.Windows.Forms.Label label12;
         public System.Windows.Forms.ComboBox cbxTransType;
+        private System.Windows.Forms.DataGridView dgvTransaksiDetail;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn1;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn3;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn4;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Price2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Qty2;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn7;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn8;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn9;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn10;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn11;
+        private System.Windows.Forms.DataGridViewTextBoxColumn dataGridViewTextBoxColumn12;
         private System.Windows.Forms.DataGridView dgvTransacTiketDet;
         private System.Windows.Forms.DataGridViewTextBoxColumn TransactionID;
+        private System.Windows.Forms.DataGridViewTextBoxColumn RFID;
+        private System.Windows.Forms.DataGridViewTextBoxColumn Keterangan;
         private System.Windows.Forms.DataGridViewTextBoxColumn TransactionDate;
         private System.Windows.Forms.DataGridViewTextBoxColumn ItemID;
         private System.Windows.Forms.DataGridViewTextBoxColumn ItemName;
@@ -454,5 +641,10 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn JamKeluar;
         private System.Windows.Forms.DataGridViewTextBoxColumn WaktuBermain;
         private System.Windows.Forms.DataGridViewTextBoxColumn Toleransi;
+        private System.Windows.Forms.DataGridViewTextBoxColumn TagID;
+        public System.Windows.Forms.TextBox txtKeterangan;
+        public System.Windows.Forms.Label label8;
+        public System.Windows.Forms.TextBox txtRFIDScan;
+        public System.Windows.Forms.Label label7;
     }
 }

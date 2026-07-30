@@ -229,21 +229,21 @@ namespace MilenialPark.Views.Transaction
                             ucShopItem
                         );
 
-                ucShopItem.pbPanel.Click +=
-                    (se, ev) =>
-                        UserControlClick(
-                            se,
-                            ev,
-                            ucShopItem
-                        );
+                //ucShopItem.pbPanel.Click +=
+                //    (se, ev) =>
+                //        UserControlClick(
+                //            se,
+                //            ev,
+                //            ucShopItem
+                //        );
 
-                ucShopItem.pbShopItem.Click +=
-                    (se, ev) =>
-                        UserControlClick(
-                            se,
-                            ev,
-                            ucShopItem
-                        );
+                //ucShopItem.pbShopItem.Click +=
+                //    (se, ev) =>
+                //        UserControlClick(
+                //            se,
+                //            ev,
+                //            ucShopItem
+                //        );
 
                 ucShopItem.lblItemName.Click +=
                     (se, ev) =>

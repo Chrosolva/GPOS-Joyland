@@ -21,8 +21,8 @@ namespace MilenialPark.Models
         public decimal Subtotal { get; set; }
         public decimal PPN { get; set; }
 
-        public List<ClsTransactionDetail> listtransdet = new List<ClsTransactionDetail>(); 
-        public List<ClsTransactionTiketDetail> listtranstikdet = new List<ClsTransactionTiketDetail>(); 
+        public List<ClsTransactionDetail> listtransdet = new List<ClsTransactionDetail>();
+        public List<ClsTransactionTiketDetail> listtranstikdet = new List<ClsTransactionTiketDetail>();
 
         public decimal InitialBalance { get; set; }
         public decimal finalBalance { get; set; }
@@ -30,6 +30,7 @@ namespace MilenialPark.Models
         public string TransactionStatus { get; set; }
         public string TransactionType { get; set; }
         public string KodeCabang { get; set; }
+        public string UserID { get; set; }
 
 
 
@@ -120,6 +121,25 @@ namespace MilenialPark.Models
             this.TransactionStatus = TransactionStatus;
             this.TransactionType = TransactionType;
             this.KodeCabang = KodeCabang;
+        }
+
+        public ClsTransaction(string TransactionID, DateTime TransactionDate, decimal totalamount, string paymenttype, string cardid, string shopid, string remarks, decimal subtotal, decimal ppn, decimal initial, decimal final, string TransactionStatus, string TransactionType, string KodeCabang, string UserID)
+        {
+            this.TransactionID = TransactionID;
+            this.TransactionDate = TransactionDate;
+            this.totalAmount = totalamount;
+            this.PaymentType = paymenttype;
+            this.CardID = cardid;
+            this.ShopId = shopid;
+            this.Remarks = remarks;
+            this.Subtotal = subtotal;
+            this.PPN = ppn;
+            this.InitialBalance = initial;
+            this.finalBalance = final;
+            this.TransactionStatus = TransactionStatus;
+            this.TransactionType = TransactionType;
+            this.KodeCabang = KodeCabang;
+            this.UserID = UserID;
         }
 
         #endregion
