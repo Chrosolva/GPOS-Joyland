@@ -49,9 +49,20 @@ namespace MilenialPark.Views.Transaction
 
         public FrmOrder(Mainform parent, ClsShop shop)
         {
-            parentfrm = parent;
             InitializeComponent();
-            objShop = shop;
+
+            parentfrm = parent;
+
+            if (ClsStaticVariable.CurrentShop == null)
+            {
+                ClsStaticVariable.CurrentShop = shop;
+            }
+
+            if (!ValidateUniversalShop())
+            {
+                return;
+            }
+
             imgList.Images.Add(Resource.food_app);
             imgList.Images.Add(Resource.mobile_payment);
             imgList.Images.Add(Resource.history);
@@ -59,10 +70,17 @@ namespace MilenialPark.Views.Transaction
             ordertabs.ImageList = imgList;
             ordertabs.TabPages[0].ImageIndex = 0;
             ordertabs.TabPages[1].ImageIndex = 2;
-            //ordertabs.TabPages[2].ImageIndex = 2;
 
-            excludecategory = "";
-            if (DateTime.Now.DayOfWeek.ToString().Equals("Saturday") || DateTime.Now.DayOfWeek.ToString().Equals("Sunday"))
+            SetDefaultTransactionType();
+        }
+
+        private void SetDefaultTransactionType()
+        {
+            bool isWeekend =
+                DateTime.Now.DayOfWeek == DayOfWeek.Saturday ||
+                DateTime.Now.DayOfWeek == DayOfWeek.Sunday;
+
+            if (isWeekend)
             {
                 cbxTransType.SelectedIndex = 1;
                 excludecategory = "WEEKDAY";
@@ -72,12 +90,6 @@ namespace MilenialPark.Views.Transaction
                 cbxTransType.SelectedIndex = 0;
                 excludecategory = "WEEKEND";
             }
-            controllerShop.getShopandShopItem2Union(objShop.ShopID, excludecategory);
-            hasShop();
-            //dtpFrom.Value = DateTime.Now.AddDays(-1);
-            //dtpTo.Value = DateTime.Now;
-            //dtpFrom2.Value = DateTime.Now.AddDays(-1);
-            //dtpTo2.Value = DateTime.Now;
         }
 
         public void UserControlClick(object sender, EventArgs e, UCShopItem ucshopitem)
@@ -164,61 +176,153 @@ namespace MilenialPark.Views.Transaction
 
         public void FillFLPanel(object sender, EventArgs e)
         {
-            controllerShop.getShopandShopItem2Union(objShop.ShopID, excludecategory);
             FLMenu.Controls.Clear();
             listShopItem.Clear();
-            if (controllerShop.objShop.listShopitem.Count != 0)
-            {
-                foreach (ClsShopItem shopItem in controllerShop.objShop.listShopitem)
-                {
-                    UCShopItem ucShopItem = new UCShopItem(shopItem);
-                    ucShopItem.outerpanel.Click += (se, ev) => this.UserControlClick(sender, e, ucShopItem);
-                    ucShopItem.contentpanel.Click += (se, ev) => this.UserControlClick(sender, e, ucShopItem);
-                    ucShopItem.pbPanel.Click += (se, ev) => this.UserControlClick(sender, e, ucShopItem);
-                    ucShopItem.pbShopItem.Click += (se, ev) => this.UserControlClick(sender, e, ucShopItem);
-                    ucShopItem.lblItemName.Click += (se, ev) => this.UserControlClick(sender, e, ucShopItem);
-                    ucShopItem.lblRP.Click += (se, ev) => this.UserControlClick(sender, e, ucShopItem);
-                    ucShopItem.lblItemPrice.Click += (se, ev) => this.UserControlClick(sender, e, ucShopItem);
 
-                    listShopItem.Add(ucShopItem);
-                }
-            }
-            if (listShopItem.Count != 0)
+            if (!ValidateUniversalShop())
             {
-                for (int i = 0; i < listShopItem.Count; i++)
-                {
-                    FLMenu.Controls.Add(listShopItem[i]);
-                }
+                return;
+            }
+
+            string shopID =
+                ClsStaticVariable.CurrentShop.ShopID;
+
+            bool loaded =
+                controllerShop.getShopandShopItem2Union(
+                    shopID,
+                    excludecategory
+                );
+
+            if (!loaded ||
+                controllerShop.objShop == null ||
+                controllerShop.objShop.listShopitem == null)
+            {
+                ClsFungsi.Pesan(
+                    "Gagal memuat item untuk Universal Shop '" +
+                    shopID +
+                    "'.",
+                    "ERROR"
+                );
+
+                return;
+            }
+
+            foreach (ClsShopItem shopItem
+                     in controllerShop.objShop.listShopitem)
+            {
+                UCShopItem ucShopItem =
+                    new UCShopItem(shopItem);
+
+                ucShopItem.outerpanel.Click +=
+                    (se, ev) =>
+                        UserControlClick(
+                            se,
+                            ev,
+                            ucShopItem
+                        );
+
+                ucShopItem.contentpanel.Click +=
+                    (se, ev) =>
+                        UserControlClick(
+                            se,
+                            ev,
+                            ucShopItem
+                        );
+
+                ucShopItem.pbPanel.Click +=
+                    (se, ev) =>
+                        UserControlClick(
+                            se,
+                            ev,
+                            ucShopItem
+                        );
+
+                ucShopItem.pbShopItem.Click +=
+                    (se, ev) =>
+                        UserControlClick(
+                            se,
+                            ev,
+                            ucShopItem
+                        );
+
+                ucShopItem.lblItemName.Click +=
+                    (se, ev) =>
+                        UserControlClick(
+                            se,
+                            ev,
+                            ucShopItem
+                        );
+
+                ucShopItem.lblRP.Click +=
+                    (se, ev) =>
+                        UserControlClick(
+                            se,
+                            ev,
+                            ucShopItem
+                        );
+
+                ucShopItem.lblItemPrice.Click +=
+                    (se, ev) =>
+                        UserControlClick(
+                            se,
+                            ev,
+                            ucShopItem
+                        );
+
+                listShopItem.Add(ucShopItem);
+            }
+
+            if (listShopItem.Count > 0)
+            {
+                FLMenu.Controls.AddRange(
+                    listShopItem.ToArray()
+                );
             }
         }
 
-        public void hasShop()
+        private bool ValidateUniversalShop()
         {
-            if (controllerShop.checkShop2(ClsStaticVariable.controllerUser.objUser.UserID, objShop.ShopID))
+            if (ClsStaticVariable.CurrentShop == null)
             {
-                parentfrm.lblShopID.Visible = true;
-                parentfrm.lblShopName.Visible = true;
-                parentfrm.lblMainProduct.Visible = true;
-                parentfrm.lblAddress.Visible = true;
+                ClsFungsi.Pesan(
+                    "Universal Shop belum dimuat. Silakan logout dan login kembali.",
+                    "ERROR"
+                );
 
-                parentfrm.lblShopID.Text = controllerShop.objShop.ShopID;
-                parentfrm.lblShopName.Text = controllerShop.objShop.ShopName;
-                parentfrm.lblMainProduct.Text = controllerShop.objShop.MainProduct;
-                parentfrm.lblAddress.Text = controllerShop.objShop.Address;
+                return false;
             }
-            else
+
+            if (string.IsNullOrWhiteSpace(
+                ClsStaticVariable.CurrentShop.ShopID))
             {
-                ClsFungsi.Pesan("Maaf, akun anda belum memiliki data Toko / Shop !!! silahkan dibuat terlebih dahulu ", "ERROR");
+                ClsFungsi.Pesan(
+                    "ShopID Universal Shop tidak valid.",
+                    "ERROR"
+                );
 
+                return false;
             }
+
+            objShop = ClsStaticVariable.CurrentShop;
+            controllerShop.objShop = ClsStaticVariable.CurrentShop;
+
+            return true;
         }
 
         private void FrmOrder_Load(object sender, EventArgs e)
         {
-            //FillFLPanel(sender, e);
-            hasShop();
-            parentfrm.btnFind.Click += this.OrderSearch;
-            parentfrm.txtSearch.TextChanged += this.OrderSearch;
+            if (!ValidateUniversalShop())
+            {
+                BeginInvoke(new Action(Close));
+                return;
+            }
+
+            FillFLPanel(sender, e);
+
+            parentfrm.btnFind.Click += OrderSearch;
+            parentfrm.txtSearch.TextChanged += OrderSearch;
+
+            parentfrm.cbxCategory.Items.Clear();
             parentfrm.cbxCategory.Items.Add("Item Name");
             parentfrm.cbxCategory.SelectedIndex = 0;
             parentfrm.cbxCategory.Enabled = false;
@@ -298,7 +402,6 @@ namespace MilenialPark.Views.Transaction
                 {
                     UCOrderItem tmp = (UCOrderItem)x;
                     tmp.objTransdet.TransactionID = controllerTrans.TransactionID;
-                    controllerTrans.objTransaction.listtransdet.Add(tmp.objTransdet);
                     controllerTrans.objTransaction.listtransdet.Add(tmp.objTransdet);
                 }
 
