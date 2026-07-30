@@ -22,6 +22,9 @@ namespace MilenialPark.Models
         public DateTime JamKeluar { get; set; }
         public int WaktuBermain { get; set; }
         public int Toleransi { get; set; }
+        public string RFID { get; set; }  // new property
+        public string Keterangan { get; set; }  // new property
+        public string TagID { get; set; }  // new property
 
 
         #endregion
@@ -59,7 +62,7 @@ namespace MilenialPark.Models
             this.Toleransi = Toleransi;
         }
 
-        public ClsTransactionTiketDetail(string transactionid, DateTime transactiondate, string itemid, string itemname, decimal price, int qty,int NoUrut, string OrderStatus, DateTime Jammasuk, DateTime Jamkeluar, int WaktuBermain, int Toleransi)
+        public ClsTransactionTiketDetail(string transactionid, DateTime transactiondate, string itemid, string itemname, decimal price, int qty, int NoUrut, string OrderStatus, DateTime Jammasuk, DateTime Jamkeluar, int WaktuBermain, int Toleransi)
         {
             this.TransactionID = transactionid;
             this.TransactionDate = transactiondate;
@@ -74,6 +77,29 @@ namespace MilenialPark.Models
             this.WaktuBermain = WaktuBermain;
             this.Toleransi = Toleransi;
         }
+
+        public ClsTransactionTiketDetail(string transactionid, DateTime transactiondate, string itemid,
+       string itemname, decimal price, int qty, int noUrut, string orderStatus,
+       DateTime jamMasuk, DateTime jamKeluar, int waktuBermain, int toleransi, string rfid = null, string keterangan = null, string tagid = null)
+        {
+            TransactionID = transactionid;
+            TransactionDate = transactiondate;
+            ItemId = itemid;
+            ItemName = itemname;
+            Price = price;
+            Qty = qty;
+            NoUrut = noUrut;
+            OrderStatus = orderStatus;
+            JamMasuk = jamMasuk;
+            JamKeluar = jamKeluar;
+            WaktuBermain = waktuBermain;
+            Toleransi = toleransi;
+            RFID = rfid;
+            Keterangan = keterangan;
+            TagID = tagid;
+        }
+
+
         #endregion
     }
 }
