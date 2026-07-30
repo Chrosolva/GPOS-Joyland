@@ -84,10 +84,15 @@ namespace MilenialPark.Controller
 
         public DataTable GetRFIDByTagID(string tagID)
         {
-            string query = "SELECT TOP 1 RFIDTagID, TagID, RFIDName, TypeRFID, Status, LastScan " +
-                           "FROM RFIDTags " +
-                           "WHERE TagID = " + ClsFungsi.C2Q(tagID) + " AND Status = 1";
-            return ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(query);
+            string query =
+                "SELECT TOP 1 RFIDTagID, TagID, RFIDName, TypeRFID, Status, LastScan " +
+                "FROM WHNPOS.dbo.RFIDTags " +
+                "WHERE TagID = " + ClsFungsi.C2Q(tagID) + " " +
+                "AND Status = 1";
+
+            return ClsStaticVariable.objConnection
+                .objsqlconnection
+                .Filldatatable(query);
         }
 
         public DataRow GetByTagID(string tagID, string typeRFID = "")
