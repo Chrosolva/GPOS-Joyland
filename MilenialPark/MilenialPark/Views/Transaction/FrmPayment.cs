@@ -32,6 +32,7 @@ namespace MilenialPark.Views.Transaction
         public DataTable dt;
         public DataSet ds;
         public DataSet dsQR;
+        public ControllerRFID controllerRFID = new ControllerRFID();
 
 
         #endregion
@@ -51,7 +52,7 @@ namespace MilenialPark.Views.Transaction
 
         private void cbxPaymentType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            
+
         }
 
         public void scan()
@@ -98,7 +99,7 @@ namespace MilenialPark.Views.Transaction
         {
             if (e.KeyCode == Keys.Enter)
             {
-                scan();  
+                scan();
             }
         }
 
@@ -107,18 +108,18 @@ namespace MilenialPark.Views.Transaction
             btnSave.Enabled = false;
 
             decimal selisih = Convert.ToDecimal(lblCardBalance.Text) - Convert.ToDecimal(lblTotal.Text);
-            if (cbxPaymentType.Text =="CARD" && Convert.ToDecimal(lblCardBalance.Text) == 0)
+            if (cbxPaymentType.Text == "CARD" && Convert.ToDecimal(lblCardBalance.Text) == 0)
             {
                 ClsFungsi.Pesan("Maaf Saldo anda kosong , silahkan diisi terlebih dahulu !!!", "INFO");
             }
-            else if (cbxPaymentType.Text == "CARD" &&  selisih < 0)
+            else if (cbxPaymentType.Text == "CARD" && selisih < 0)
             {
                 ClsFungsi.Pesan("Maaf Saldo anda tidak cukup , silahkan diisi terlebih dahulu !!!", "ERROR");
             }
             else
             {
                 DialogResult dialogResult = MessageBox.Show("Apakah anda yakin ingin menyimpan data Transaksi dengan ID  " + lblTransactionID.Text + " ? " +
-                    " Dengan Jumlah Sebanyak = " + lblTotal.Text.ToString() , "Warning", MessageBoxButtons.YesNo);
+                    " Dengan Jumlah Sebanyak = " + lblTotal.Text.ToString(), "Warning", MessageBoxButtons.YesNo);
                 scan();
 
                 if (dialogResult == DialogResult.Yes)
@@ -135,7 +136,7 @@ namespace MilenialPark.Views.Transaction
                     controllerTran.objTransaction.listtranstikdet = new List<ClsTransactionTiketDetail>();
                     // set Detail Transaksi 
 
-                    int index  = 0;
+                    int index = 0;
                     foreach (DataGridViewRow row in dgvTransacTiketDet.Rows)
                     {
                         if (!row.IsNewRow)
@@ -168,7 +169,7 @@ namespace MilenialPark.Views.Transaction
                     decimal totalchecking = 0;
                     string itemchecking = "";
                     int i = 1;
-                    foreach(DataGridViewRow row in dgvTransacTiketDet.Rows)
+                    foreach (DataGridViewRow row in dgvTransacTiketDet.Rows)
                     {
                         if (!row.IsNewRow)
                         {
@@ -177,14 +178,14 @@ namespace MilenialPark.Views.Transaction
                             itemchecking += "Item-" + i.ToString() + " :ID = " + row.Cells["ItemID"].Value.ToString() + " Name = " + row.Cells["ItemName"].Value.ToString() + " Qty = " + row.Cells["Qty"].Value.ToString() + " Price = " + row.Cells["Price"].Value.ToString() + "Subtotal = " + tmp.ToString();
                             i++;
                         }
-                         
+
                     }
 
                     string logmessage = "PRECHECK!";
                     logmessage += "TOTALAMOUNT = " + totalchecking.ToString();
                     logmessage += "ITEMCHECKING = " + itemchecking;
 
-                    if(controllerTran.objTransaction.totalAmount == totalchecking)
+                    if (controllerTran.objTransaction.totalAmount == totalchecking)
                     {
                         try
                         {
@@ -357,59 +358,223 @@ namespace MilenialPark.Views.Transaction
             }
         }
 
-        private void FrmPayment_Load(object sender, EventArgs e)
+        private void FrmPayment_Load(
+    object sender,
+    EventArgs e)
         {
-            cbxRemarks.SelectedIndex = 0;
-            cbxRemarks.Enabled = false;
-
-            foreach (ClsTransactionTiketDetail det in controllerTran.objTransaction.listtranstikdet)
+            if (controllerTran == null ||
+                controllerTran.objTransaction == null)
             {
-                controllerTran.dt = controllerTran.checkCategory2(det.ItemId);
-                if (controllerTran.dt.Rows.Count > 0)
+                ClsFungsi.Pesan(
+                    "Data transaksi tidak tersedia.",
+                    "ERROR"
+                );
+
+                BeginInvoke(new Action(Close));
+                return;
+            }
+
+            dgvTransacTiketDet.Rows.Clear();
+            dgvTransaksiDetail.Rows.Clear();
+
+            if (controllerTran.objTransaction.listtranstikdet == null)
+            {
+                controllerTran.objTransaction.listtranstikdet =
+                    new List<ClsTransactionTiketDetail>();
+            }
+
+            int noUrut = 1;
+
+            foreach (
+                ClsTransactionTiketDetail detail
+                in controllerTran.objTransaction.listtranstikdet)
+            {
+                if (detail.WaktuBermain > 0)
                 {
-                    string category = controllerTran.dt.Rows[0]["category"].ToString();
-                    if (category == "WEEKDAY" || category == "WEEKEND" || category == "COMPANION")
-                    {
-                        generatetransacttiketdetail(det);
-                    }
-                    else if (category != "WEEKDAY" || category != "WEEKEND" || category != "COMPANION")
-                    {
-                        DataGridViewRow row = (DataGridViewRow)dgvTransacTiketDet.Rows[0].Clone();
-                        //Clstr objtransdet = new ClsTransactionDetail("ORDTMP", DateTime.Now, objShopItem.ItemID, objShopItem.ItemName, objShopItem.Price, Convert.ToInt32(NUDQty.Value), "NOTSERVED");
-                        row.Cells[0].Value = lblTransactionID.Text;
-                        row.Cells[1].Value = DateTime.Now;
-                        row.Cells[2].Value = det.ItemId;
-                        row.Cells[3].Value = det.ItemName;
-                        row.Cells[4].Value = det.Price;
-                        row.Cells[5].Value = det.Qty;
-                        row.Cells[6].Value = 1;
-                        row.Cells[7].Value = "TMP";
-                        row.Cells[8].Value = DateTime.Now;
-                        row.Cells[9].Value = DateTime.Now;
-                        row.Cells[10].Value = det.WaktuBermain;
-                        row.Cells[11].Value = det.Toleransi;
-                        dgvTransacTiketDet.Rows.Add(row);
-                    }
+                    AddTicketRows(
+                        detail,
+                        ref noUrut
+                    );
                 }
                 else
                 {
-                    DataGridViewRow row = (DataGridViewRow)dgvTransacTiketDet.Rows[0].Clone();
-                    //Clstr objtransdet = new ClsTransactionDetail("ORDTMP", DateTime.Now, objShopItem.ItemID, objShopItem.ItemName, objShopItem.Price, Convert.ToInt32(NUDQty.Value), "NOTSERVED");
-                    row.Cells[0].Value = lblTransactionID.Text;
-                    row.Cells[1].Value = DateTime.Now;
-                    row.Cells[2].Value = det.ItemId;
-                    row.Cells[3].Value = det.ItemName;
-                    row.Cells[4].Value = det.Price;
-                    row.Cells[5].Value = det.Qty;
-                    row.Cells[6].Value = 1;
-                    row.Cells[7].Value = "TMP";
-                    row.Cells[8].Value = DateTime.Now;
-                    row.Cells[9].Value = DateTime.Now;
-                    row.Cells[10].Value = det.WaktuBermain;
-                    row.Cells[11].Value = det.Toleransi;
-                    dgvTransacTiketDet.Rows.Add(row);
+                    AddNonTicketRow(
+                        detail,
+                        noUrut
+                    );
+
+                    noUrut++;
                 }
             }
+
+            cbxRemarks.SelectedIndex = 0;
+            cbxRemarks.Enabled = false;
+
+            dgvTransacTiketDet.ReadOnly = false;
+
+            dgvTransacTiketDet
+                .Columns["RFID"]
+                .ReadOnly = true;
+
+            dgvTransacTiketDet
+                .Columns["TagID"]
+                .ReadOnly = true;
+
+            dgvTransacTiketDet
+                .Columns["Keterangan"]
+                .ReadOnly = false;
+
+            if (dgvTransacTiketDet.Rows.Count > 0)
+            {
+                dgvTransacTiketDet.CurrentCell =
+                    dgvTransacTiketDet
+                        .Rows[0]
+                        .Cells["RFID"];
+            }
+
+            FocusRFIDScan();
+        }
+
+        private static decimal ToDecimalSafe(object value)
+        {
+            if (value == null || value == DBNull.Value)
+                return 0m;
+
+            decimal result;
+
+            return decimal.TryParse(
+                value.ToString(),
+                out result
+            )
+                ? result
+                : 0m;
+        }
+
+        private static int ToIntSafe(object value)
+        {
+            if (value == null || value == DBNull.Value)
+                return 0;
+
+            int result;
+
+            return int.TryParse(
+                value.ToString(),
+                out result
+            )
+                ? result
+                : 0;
+        }
+
+        private static string GetCellString(
+            DataGridViewRow row,
+            string columnName)
+        {
+            if (row == null ||
+                !row.DataGridView.Columns.Contains(columnName))
+            {
+                return "";
+            }
+
+            object value = row.Cells[columnName].Value;
+
+            return value == null ||
+                   value == DBNull.Value
+                ? ""
+                : value.ToString().Trim();
+        }
+
+        private void AddTicketRows(
+    ClsTransactionTiketDetail detail,
+    ref int noUrut)
+        {
+            int qty = detail.Qty <= 0
+                ? 1
+                : detail.Qty;
+
+            for (int i = 0; i < qty; i++)
+            {
+                int rowIndex =
+                    dgvTransacTiketDet.Rows.Add();
+
+                DataGridViewRow row =
+                    dgvTransacTiketDet.Rows[rowIndex];
+
+                row.Cells["TransactionID"].Value =
+                    controllerTran.objTransaction.TransactionID;
+
+                row.Cells["RFID"].Value =
+                    detail.RFID ?? "";
+
+                row.Cells["TagID"].Value =
+                    detail.TagID ?? "";
+
+                row.Cells["Keterangan"].Value =
+                    detail.Keterangan ?? "";
+
+                row.Cells["TransactionDate"].Value =
+                    DateTime.Now;
+
+                row.Cells["ItemID"].Value =
+                    detail.ItemId;
+
+                row.Cells["ItemName"].Value =
+                    detail.ItemName;
+
+                row.Cells["Price"].Value =
+                    detail.Price;
+
+                row.Cells["Qty"].Value = 1;
+
+                row.Cells["NoUrut"].Value =
+                    noUrut;
+
+                row.Cells["OrderStatus"].Value =
+                    "TMP";
+
+                row.Cells["JamMasuk"].Value =
+                    DateTime.Now;
+
+                row.Cells["JamKeluar"].Value =
+                    DateTime.Now;
+
+                row.Cells["WaktuBermain"].Value =
+                    detail.WaktuBermain;
+
+                row.Cells["Toleransi"].Value =
+                    detail.Toleransi;
+
+                noUrut++;
+            }
+        }
+
+        private void AddNonTicketRow(
+    ClsTransactionTiketDetail detail,
+    int noUrut)
+        {
+            dgvTransaksiDetail.Rows.Add(
+                controllerTran.objTransaction.TransactionID,
+                DateTime.Now,
+                detail.ItemId,
+                detail.ItemName,
+                detail.Price,
+                detail.Qty,
+                noUrut,
+                detail.OrderStatus ?? "TMP",
+                DateTime.Now,
+                DateTime.Now,
+                0,
+                0
+            );
+        }
+
+        public void FocusRFIDScan()
+        {
+            if (!txtRFIDScan.Enabled || !txtRFIDScan.Visible) return;
+
+            txtRFIDScan.Focus();
+            txtRFIDScan.SelectAll();   // so next scan overwrites immediately
         }
     }
+
+
 }
