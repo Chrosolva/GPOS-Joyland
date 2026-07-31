@@ -427,140 +427,560 @@ namespace MilenialPark.Controller
             ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(queryy);
         }
 
-        public string InsertTransactionTicket(ClsTransaction trans, ClsCard card)
+        public string InsertTransactionTicket(
+    ClsTransaction trans,
+    ClsCard card)
         {
             ClsStaticVariable.sukses = false;
-            // Cut Card Balance 
-            decimal finalbalance;
-            if (trans.PaymentType == "MASTER_CARD")
+
+            #region Validasi awal
+
+            if (trans == null)
             {
-                finalbalance = 0;
+                return "Data transaksi tidak tersedia.";
+            }
+
+            if (string.IsNullOrWhiteSpace(trans.TransactionID))
+            {
+                return "TransactionID tidak tersedia.";
+            }
+
+            if (string.IsNullOrWhiteSpace(trans.ShopId))
+            {
+                return "ShopID transaksi tidak tersedia.";
+            }
+
+            if (string.IsNullOrWhiteSpace(trans.PaymentType))
+            {
+                return "Payment Type belum ditentukan.";
+            }
+
+            if (card == null)
+            {
+                return "Data kartu tidak tersedia.";
+            }
+
+            if (trans.listtranstikdet == null)
+            {
+                trans.listtranstikdet =
+                    new List<ClsTransactionTiketDetail>();
+            }
+
+            bool isMasterCard =
+                string.Equals(
+                    trans.PaymentType,
+                    "MASTER_CARD",
+                    StringComparison.OrdinalIgnoreCase
+                );
+
+            if (!isMasterCard &&
+                string.IsNullOrWhiteSpace(card.CardID))
+            {
+                return "CardID tidak tersedia.";
+            }
+
+            // Pastikan seluruh detail memakai TransactionID header.
+            foreach (
+                ClsTransactionTiketDetail detail
+                in trans.listtranstikdet)
+            {
+                if (detail == null)
+                {
+                    return "Ditemukan detail tiket yang tidak valid.";
+                }
+
+                detail.TransactionID =
+                    trans.TransactionID;
+
+                if (detail.NoUrut <= 0)
+                {
+                    return
+                        "NoUrut tiket tidak valid untuk item " +
+                        detail.ItemName +
+                        ".";
+                }
+
+                if (string.IsNullOrWhiteSpace(detail.ItemId))
+                {
+                    return
+                        "ItemID tiket tidak tersedia pada NoUrut " +
+                        detail.NoUrut +
+                        ".";
+                }
+
+                if (detail.WaktuBermain > 0 &&
+                    string.IsNullOrWhiteSpace(detail.TagID))
+                {
+                    return
+                        "TagID RFID belum diisi pada tiket NoUrut " +
+                        detail.NoUrut +
+                        ".";
+                }
+
+                if (detail.WaktuBermain > 0 &&
+                    string.IsNullOrWhiteSpace(detail.RFID))
+                {
+                    return
+                        "Nama/nomor RFID belum diisi pada tiket NoUrut " +
+                        detail.NoUrut +
+                        ".";
+                }
+            }
+
+            // Pastikan TagID tidak duplikat dalam transaksi yang sama.
+            List<string> duplicateTagIDs =
+                trans.listtranstikdet
+                    .Where(x =>
+                        x != null &&
+                        !string.IsNullOrWhiteSpace(x.TagID))
+                    .GroupBy(
+                        x => x.TagID.Trim(),
+                        StringComparer.OrdinalIgnoreCase
+                    )
+                    .Where(group => group.Count() > 1)
+                    .Select(group => group.Key)
+                    .ToList();
+
+            if (duplicateTagIDs.Count > 0)
+            {
+                return
+                    "TagID RFID duplikat ditemukan: " +
+                    string.Join(", ", duplicateTagIDs);
+            }
+
+            #endregion
+
+            #region Hitung saldo
+
+            decimal finalBalance;
+
+            if (isMasterCard)
+            {
+                // MASTER_CARD tidak memotong saldo kartu.
+                finalBalance = card.Saldo;
             }
             else
             {
-                finalbalance = card.Saldo - trans.totalAmount;
+                finalBalance =
+                    card.Saldo - trans.totalAmount;
             }
-            if (finalbalance < 0 && (trans.PaymentType != "MASTER_CARD"))
+
+            if (!isMasterCard && finalBalance < 0)
             {
-                return "Data Transaksi Gagal ditambah karena saldo kartu tidak mencukupi !!!";
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "PRECHECK FAILED: Saldo kartu tidak mencukupi. " +
+                    "Saldo=" + card.Saldo +
+                    ", Total=" + trans.totalAmount +
+                    ", FinalBalance=" + finalBalance,
+                    "ERROR"
+                );
+
+                return
+                    "Data transaksi gagal ditambah karena " +
+                    "saldo kartu tidak mencukupi.";
             }
-            else
+
+            trans.finalBalance =
+                finalBalance;
+
+            #endregion
+
+            string logMessage =
+                "1. Adding Transaction. " +
+                "TransactionID=" + trans.TransactionID +
+                ", Date=" + trans.TransactionDate +
+                ", InitialBalance=" + card.Saldo +
+                ", FinalBalance=" + finalBalance +
+                ", CardID=" + card.CardID +
+                ", ShopID=" + trans.ShopId +
+                ", TotalAmount=" + trans.totalAmount +
+                ", PaymentType=" + trans.PaymentType;
+
+            InsertDataLogSafe(
+                trans.TransactionID,
+                logMessage,
+                "INFO"
+            );
+
+            #region Insert header transaksi
+
+            query =
+                "INSERT INTO WHNPOS.dbo.Transaksi " +
+                "(" +
+                "TransactionID, " +
+                "TransactionDate, " +
+                "TotalAmount, " +
+                "PaymentType, " +
+                "CardID, " +
+                "ShopID, " +
+                "Remarks, " +
+                "Subtotal, " +
+                "PPN, " +
+                "InitialBalance, " +
+                "FinalBalance, " +
+                "TransactionStatus, " +
+                "TransactionType, " +
+                "KodeCabang" +
+                ") VALUES (" +
+                ClsFungsi.C2Q(trans.TransactionID) + ", " +
+                "GETDATE(), " +
+                ClsFungsi.C2Q(trans.totalAmount) + ", " +
+                ClsFungsi.C2Q(trans.PaymentType) + ", " +
+                ClsFungsi.C2Q(trans.CardID) + ", " +
+                ClsFungsi.C2Q(trans.ShopId) + ", " +
+                ClsFungsi.C2Q(trans.Remarks) + ", " +
+                ClsFungsi.C2Q(trans.Subtotal) + ", " +
+                ClsFungsi.C2Q(trans.PPN) + ", " +
+                ClsFungsi.C2Q(trans.InitialBalance) + ", " +
+                ClsFungsi.C2Q(trans.finalBalance) + ", " +
+                ClsFungsi.C2Q("PAID") + ", " +
+                ClsFungsi.C2Q(trans.TransactionType) + ", " +
+                ClsFungsi.C2Q(ClsStaticVariable.KodeBranch) +
+                ")";
+
+            try
             {
-                trans.finalBalance = finalbalance;
+                int affectedHeader =
+                    ClsStaticVariable.objConnection
+                        .objSqlServerIUDClass
+                        .ExecuteNonQuery(query);
 
-
-                string logmessage = "1. Adding Transaction ID = " + trans.TransactionID + " Into Database, Date = " + trans.TransactionDate.ToString() + "  , Final Balance = " + finalbalance + " , Card ID = " + card.CardID + " , ShopID = " + trans.ShopId + " , TotalAmount = " + trans.totalAmount.ToString();
-                string queryy = $" Insert Into WHNPOS.dbo.DataLog (TransactionID, LogMessage, LogType) values ({ClsFungsi.C2Q(trans.TransactionID)}, {ClsFungsi.C2Q(logmessage)}, {ClsFungsi.C2Q("INFO")})";
-                ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(queryy);
-
-                //Insert Transaction
-
-                query = " Insert Into WHNPOS.dbo.Transaksi " +
-                    " (TransactionID, TransactionDate, TotalAmount, PaymentType, CardID, ShopID, Remarks, Subtotal, PPN, InitialBalance, FinalBalance, TransactionStatus, TransactionType, KodeCabang) " +
-                    " values " +
-                    $" ({ClsFungsi.C2Q(trans.TransactionID)}, GETDATE() , {ClsFungsi.C2Q(trans.totalAmount)}, {ClsFungsi.C2Q(trans.PaymentType)}, {ClsFungsi.C2Q(trans.CardID)}, {ClsFungsi.C2Q(trans.ShopId)}, {ClsFungsi.C2Q(trans.Remarks)}, {ClsFungsi.C2Q(trans.Subtotal)}, {ClsFungsi.C2Q(trans.PPN)}, {ClsFungsi.C2Q(trans.InitialBalance)}, {ClsFungsi.C2Q(trans.finalBalance)}, {ClsFungsi.C2Q("PAID")}, {ClsFungsi.C2Q(trans.TransactionType)}, {ClsFungsi.C2Q(ClsStaticVariable.KodeBranch)})";
-
-                try
+                if (affectedHeader <= 0)
                 {
-                    ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(query);
-                    ClsStaticVariable.sukses = true;
-                    logmessage = "2. Transaction ADD SUCCESS" + " query = " + query;
-                    queryy = $" Insert Into WHNPOS.dbo.DataLog (TransactionID, LogMessage, LogType) values ({ClsFungsi.C2Q(trans.TransactionID)}, {ClsFungsi.C2Q(logmessage)}, {ClsFungsi.C2Q("SUCCESS")})";
-                    ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(queryy);
-                }
-                catch (Exception ex)
-                {
-                    logmessage = "2. Transaction ADD FAILED , error Message = " + ex.Message + " query = " + query;
-                    queryy = $" Insert Into WHNPOS.dbo.DataLog (TransactionID, LogMessage, LogType) values ({ClsFungsi.C2Q(trans.TransactionID)}, {ClsFungsi.C2Q(logmessage)}, {ClsFungsi.C2Q("ERROR")})";
-                    ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(queryy);
-                    return "Data Transaksi Gagal Ditambah !!! error message = " + ex.Message;
+                    InsertDataLogSafe(
+                        trans.TransactionID,
+                        "2. Transaction ADD FAILED. " +
+                        "Tidak ada header yang ditambahkan. Query=" +
+                        query,
+                        "ERROR"
+                    );
+
+                    return
+                        "Data transaksi gagal ditambah. " +
+                        "Header transaksi tidak tersimpan.";
                 }
 
-                //Insert Detail
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "2. Transaction ADD SUCCESS. Query=" +
+                    query,
+                    "SUCCESS"
+                );
+
                 ClsStaticVariable.sukses = true;
+            }
+            catch (Exception ex)
+            {
+                ClsStaticVariable.sukses = false;
 
-                if (ClsStaticVariable.sukses)
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "2. Transaction ADD FAILED. " +
+                    "Error=" + ex.Message +
+                    ", Query=" + query,
+                    "ERROR"
+                );
+
+                return
+                    "Data transaksi gagal ditambah. " +
+                    "Error message: " +
+                    ex.Message;
+            }
+
+            #endregion
+
+            #region Insert detail tiket
+
+            if (!ClsStaticVariable.sukses)
+            {
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "3. Transaction Detail ADD CANCELLED " +
+                    "karena header transaksi gagal.",
+                    "ERROR"
+                );
+
+                return
+                    "Detail transaksi tidak dapat ditambahkan " +
+                    "karena header transaksi gagal.";
+            }
+
+            if (trans.listtranstikdet.Count == 0)
+            {
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "3. Transaction tidak mempunyai detail tiket.",
+                    "INFO"
+                );
+
+                ClsStaticVariable.sukses = true;
+            }
+            else
+            {
+                ClsStaticVariable.sukses = false;
+
+                foreach (
+                    ClsTransactionTiketDetail transdet
+                    in trans.listtranstikdet)
                 {
-                    ClsStaticVariable.sukses = false;
-                    if (trans.listtranstikdet.Count != 0)
-                    {
-                        int index = 1;
-                        foreach (ClsTransactionTiketDetail transdet in trans.listtranstikdet)
-                        {
-                            query2 = " Insert Into WHNPOS.dbo.TransaksiTiketDetail " +
-                                     " (TransactionID, TransactionDate, ItemID, ItemName, Price, Qty, NoUrut, OrderStatus, JamMasuk, JamKeluar, WaktuBermain, Toleransi) " +
-                                     " values " +
-                                     $"({ClsFungsi.C2Q(transdet.TransactionID)}, GETDATE(), {ClsFungsi.C2Q(transdet.ItemId)}, {ClsFungsi.C2Q(transdet.ItemName)}, {ClsFungsi.C2Q(transdet.Price)}, {ClsFungsi.C2Q(transdet.Qty)}, {ClsFungsi.C2Q(index)}, {ClsFungsi.C2Q(transdet.OrderStatus)}, {ClsFungsi.C2QTime(transdet.JamMasuk)}, {ClsFungsi.C2QTime(transdet.JamKeluar)}, {ClsFungsi.C2Q(transdet.WaktuBermain)}, {ClsFungsi.C2Q(transdet.Toleransi)})";
+                    // Nilai default untuk menghindari tanggal tidak valid.
+                    DateTime jamMasuk =
+                        transdet.JamMasuk == DateTime.MinValue
+                            ? DateTime.Now
+                            : transdet.JamMasuk;
 
-                            index++;
-                            try
-                            {
-                                ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(query2);
-                                logmessage = $"3. ADD NOUrut = {(index - 1).ToString()},  ItemID =  {transdet.ItemId}, ItemName = {transdet.ItemName}, Qty = {transdet.Qty}, Price = {transdet.Price} SUCCESS" + " query = " + query2;
-                                queryy = $" Insert Into WHNPOS.dbo.DataLog (TransactionID, LogMessage, LogType) values ({ClsFungsi.C2Q(trans.TransactionID)}, {ClsFungsi.C2Q(logmessage)}, {ClsFungsi.C2Q("SUCCESS")})";
-                                ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(queryy);
-                            }
-                            catch (Exception ex)
-                            {
-                                logmessage = "3. TransactionDetail ADD FAILED , ID = " + transdet.TransactionID + " error message = " + ex.Message + " query = " + query2;
-                                queryy = $" Insert Into WHNPOS.dbo.DataLog (TransactionID, LogMessage, LogType) values ({ClsFungsi.C2Q(trans.TransactionID)}, {ClsFungsi.C2Q(logmessage)}, {ClsFungsi.C2Q("ERROR")})";
-                                ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(queryy);
-                                return "Data Transaksi Detail Gagal Ditambah !!! error message = " + ex.Message;
-                            }
-                        }
+                    DateTime jamKeluar =
+                        transdet.JamKeluar == DateTime.MinValue
+                            ? DateTime.Now
+                            : transdet.JamKeluar;
 
-                        logmessage = "3. Transaction Detail ADD SUCCESS";
-                        queryy = $" Insert Into WHNPOS.dbo.DataLog (TransactionID, LogMessage, LogType) values ({ClsFungsi.C2Q(trans.TransactionID)}, {ClsFungsi.C2Q(logmessage)}, {ClsFungsi.C2Q("SUCCESS")})";
-                        ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(queryy);
-                        ClsStaticVariable.sukses = true;
-                    }
-                    else
-                    {
-                        ClsStaticVariable.sukses = true;
-                    }
-                }
+                    string orderStatus =
+                        string.IsNullOrWhiteSpace(
+                            transdet.OrderStatus)
+                            ? "BOUGHT"
+                            : transdet.OrderStatus;
 
-                else
-                {
-                    ClsStaticVariable.sukses = false;
-                }
+                    query2 =
+                        "INSERT INTO WHNPOS.dbo.TransaksiTiketDetail " +
+                        "(" +
+                        "TransactionID, " +
+                        "TransactionDate, " +
+                        "ItemID, " +
+                        "ItemName, " +
+                        "Price, " +
+                        "Qty, " +
+                        "NoUrut, " +
+                        "OrderStatus, " +
+                        "JamMasuk, " +
+                        "JamKeluar, " +
+                        "WaktuBermain, " +
+                        "Toleransi, " +
+                        "RFID, " +
+                        "TagID, " +
+                        "Keterangan" +
+                        ") VALUES (" +
+                        ClsFungsi.C2Q(trans.TransactionID) + ", " +
+                        "GETDATE(), " +
+                        ClsFungsi.C2Q(transdet.ItemId) + ", " +
+                        ClsFungsi.C2Q(transdet.ItemName) + ", " +
+                        ClsFungsi.C2Q(transdet.Price) + ", " +
+                        ClsFungsi.C2Q(transdet.Qty) + ", " +
+                        ClsFungsi.C2Q(transdet.NoUrut) + ", " +
+                        ClsFungsi.C2Q(orderStatus) + ", " +
+                        ClsFungsi.C2QTime(jamMasuk) + ", " +
+                        ClsFungsi.C2QTime(jamKeluar) + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.WaktuBermain) + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.Toleransi) + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.RFID ?? "") + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.TagID ?? "") + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.Keterangan ?? "") +
+                        ")";
 
-                // Update Balance
-                if (ClsStaticVariable.sukses)
-                {
-
-                    query = $" Update WHNPOS.dbo.TblCard set Saldo = {ClsFungsi.C2Q(finalbalance)} where CardID = {ClsFungsi.C2Q(card.CardID)}";
                     try
                     {
-                        logmessage = "4. EDIT BALANCE query =  " + query;
-                        queryy = $" Insert Into WHNPOS.dbo.DataLog (TransactionID, LogMessage, LogType) values ({ClsFungsi.C2Q(trans.TransactionID)}, {ClsFungsi.C2Q(logmessage)}, {ClsFungsi.C2Q("INFO")})";
-                        ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(queryy);
+                        int affectedDetail =
+                            ClsStaticVariable.objConnection
+                                .objSqlServerIUDClass
+                                .ExecuteNonQuery(query2);
 
-                        ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(query);
-                        ClsStaticVariable.sukses = true;
+                        if (affectedDetail <= 0)
+                        {
+                            ClsStaticVariable.sukses = false;
 
-                        logmessage = "4. Transaction ADD SUCCESS, DETAIL ADD SUCCESS, BALANCE ADD SUCCESS";
-                        queryy = $" Insert Into WHNPOS.dbo.DataLog (TransactionID, LogMessage, LogType) values ({ClsFungsi.C2Q(trans.TransactionID)}, {ClsFungsi.C2Q(logmessage)}, {ClsFungsi.C2Q("SUCCESS")})";
-                        ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(queryy);
-                        return "Data Transaksi dan Detail Berhasil ditambah !!! Saldo Kartu berhasil di potong!!!";
+                            InsertDataLogSafe(
+                                trans.TransactionID,
+                                "3. Transaction Detail ADD FAILED. " +
+                                "Tidak ada row yang ditambahkan. " +
+                                "NoUrut=" + transdet.NoUrut +
+                                ", ItemID=" + transdet.ItemId +
+                                ", TagID=" + transdet.TagID +
+                                ", Query=" + query2,
+                                "ERROR"
+                            );
+
+                            return
+                                "Detail tiket NoUrut " +
+                                transdet.NoUrut +
+                                " gagal ditambahkan.";
+                        }
+
+                        logMessage =
+                            "3. Transaction Detail ADD SUCCESS. " +
+                            "NoUrut=" + transdet.NoUrut +
+                            ", ItemID=" + transdet.ItemId +
+                            ", ItemName=" + transdet.ItemName +
+                            ", Qty=" + transdet.Qty +
+                            ", Price=" + transdet.Price +
+                            ", RFID=" + transdet.RFID +
+                            ", TagID=" + transdet.TagID +
+                            ", Keterangan=" +
+                            transdet.Keterangan +
+                            ", Query=" + query2;
+
+                        InsertDataLogSafe(
+                            trans.TransactionID,
+                            logMessage,
+                            "SUCCESS"
+                        );
                     }
                     catch (Exception ex)
                     {
-                        logmessage = "4. BALANCE UPDATE FAILED , error message = " + ex.Message;
-                        queryy = $" Insert Into WHNPOS.dbo.DataLog (TransactionID, LogMessage, LogType) values ({ClsFungsi.C2Q(trans.TransactionID)}, {ClsFungsi.C2Q(logmessage)}, {ClsFungsi.C2Q("ERROR")})";
-                        ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(queryy);
-                        return "Data Transaksi Gagal Ditambah !!! error message = " + ex.Message;
-                    }
+                        ClsStaticVariable.sukses = false;
 
+                        InsertDataLogSafe(
+                            trans.TransactionID,
+                            "3. Transaction Detail ADD FAILED. " +
+                            "NoUrut=" + transdet.NoUrut +
+                            ", ItemID=" + transdet.ItemId +
+                            ", TagID=" + transdet.TagID +
+                            ", Error=" + ex.Message +
+                            ", Query=" + query2,
+                            "ERROR"
+                        );
+
+                        return
+                            "Data transaksi detail gagal ditambah " +
+                            "pada NoUrut " +
+                            transdet.NoUrut +
+                            ". Error message: " +
+                            ex.Message;
+                    }
                 }
-                else
-                {
-                    logmessage = "5. !!!Transaction ADD FAILED ";
-                    queryy = $" Insert Into WHNPOS.dbo.DataLog (TransactionID, LogMessage, LogType) values ({ClsFungsi.C2Q(trans.TransactionID)}, {ClsFungsi.C2Q(logmessage)}, {ClsFungsi.C2Q("ERROR")})";
-                    ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(queryy);
-                    return "Data Transaksi Gagal Ditambah !!! ";
-                }
+
+                ClsStaticVariable.sukses = true;
+
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "3. Semua Transaction Detail ADD SUCCESS. " +
+                    "Total detail=" +
+                    trans.listtranstikdet.Count,
+                    "SUCCESS"
+                );
             }
+
+            #endregion
+
+            #region Update saldo kartu
+
+            if (!ClsStaticVariable.sukses)
+            {
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "4. BALANCE UPDATE CANCELLED " +
+                    "karena insert detail gagal.",
+                    "ERROR"
+                );
+
+                return
+                    "Saldo kartu tidak diperbarui karena " +
+                    "detail transaksi gagal ditambahkan.";
+            }
+
+            // MASTER_CARD tidak perlu diperbarui saldonya.
+            if (isMasterCard)
+            {
+                ClsStaticVariable.sukses = true;
+
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "4. BALANCE UPDATE SKIPPED. " +
+                    "PaymentType=MASTER_CARD, " +
+                    "CardID=" + card.CardID,
+                    "SUCCESS"
+                );
+
+                return
+                    "Data transaksi dan detail berhasil ditambah " +
+                    "menggunakan MASTER_CARD.";
+            }
+
+            query =
+                "UPDATE WHNPOS.dbo.TblCard " +
+                "SET Saldo = " +
+                ClsFungsi.C2Q(finalBalance) + " " +
+                "WHERE CardID = " +
+                ClsFungsi.C2Q(card.CardID);
+
+            try
+            {
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "4. EDIT BALANCE START. " +
+                    "CardID=" + card.CardID +
+                    ", OldBalance=" + card.Saldo +
+                    ", NewBalance=" + finalBalance +
+                    ", Query=" + query,
+                    "INFO"
+                );
+
+                int affectedBalance =
+                    ClsStaticVariable.objConnection
+                        .objSqlServerIUDClass
+                        .ExecuteNonQuery(query);
+
+                if (affectedBalance <= 0)
+                {
+                    ClsStaticVariable.sukses = false;
+
+                    InsertDataLogSafe(
+                        trans.TransactionID,
+                        "4. BALANCE UPDATE FAILED. " +
+                        "CardID tidak ditemukan atau saldo " +
+                        "tidak diperbarui. Query=" +
+                        query,
+                        "ERROR"
+                    );
+
+                    return
+                        "Transaksi tersimpan, tetapi saldo kartu " +
+                        "gagal diperbarui karena kartu tidak ditemukan.";
+                }
+
+                card.Saldo =
+                    finalBalance;
+
+                ClsStaticVariable.sukses = true;
+
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "4. Transaction ADD SUCCESS, " +
+                    "DETAIL ADD SUCCESS, " +
+                    "BALANCE UPDATE SUCCESS. " +
+                    "CardID=" + card.CardID +
+                    ", FinalBalance=" + finalBalance,
+                    "SUCCESS"
+                );
+
+                return
+                    "Data transaksi dan detail berhasil ditambah. " +
+                    "Saldo kartu berhasil dipotong.";
+            }
+            catch (Exception ex)
+            {
+                ClsStaticVariable.sukses = false;
+
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "4. BALANCE UPDATE FAILED. " +
+                    "CardID=" + card.CardID +
+                    ", Error=" + ex.Message +
+                    ", Query=" + query,
+                    "ERROR"
+                );
+
+                return
+                    "Data transaksi tersimpan, tetapi saldo kartu " +
+                    "gagal diperbarui. Error message: " +
+                    ex.Message;
+            }
+
+            #endregion
         }
 
 
@@ -622,7 +1042,7 @@ namespace MilenialPark.Controller
                             index++;
                             try
                             {
-                                
+
                                 ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(query2);
                                 logmessage = "3. Transaction Detail ADD SUCCESS" + " query = " + query2;
                                 queryy = $" Insert Into WHNPOS.dbo.DataLog (TransactionID, LogMessage, LogType) values ({ClsFungsi.C2Q(trans.TransactionID)}, {ClsFungsi.C2Q(logmessage)}, {ClsFungsi.C2Q("SUCCESS")})";
@@ -653,7 +1073,7 @@ namespace MilenialPark.Controller
                 }
 
                 // Update Balance
-                
+
                 query = $" Update WHNPOS.dbo.TblCard set Saldo = {ClsFungsi.C2Q(finalbalance)} where CardID = {ClsFungsi.C2Q(card.CardID)}";
                 try
                 {
@@ -676,7 +1096,44 @@ namespace MilenialPark.Controller
                     return "Data Transaksi Gagal Ditambah !!! error message = " + ex.Message;
                 }
             }
-            
+
+        }
+
+        private void InsertDataLog(
+    string transactionID,
+    string logMessage,
+    string logType)
+        {
+            string logQuery =
+                "INSERT INTO WHNPOS.dbo.DataLog " +
+                "(TransactionID, LogMessage, LogType) VALUES (" +
+                ClsFungsi.C2Q(transactionID) + ", " +
+                ClsFungsi.C2Q(logMessage) + ", " +
+                ClsFungsi.C2Q(logType) +
+                ")";
+
+            ClsStaticVariable.objConnection
+                .objSqlServerIUDClass
+                .ExecuteNonQuery(logQuery);
+        }
+
+        private void InsertDataLogSafe(
+    string transactionID,
+    string logMessage,
+    string logType)
+        {
+            try
+            {
+                InsertDataLog(
+                    transactionID,
+                    logMessage,
+                    logType
+                );
+            }
+            catch
+            {
+                // Jangan menggagalkan transaksi hanya karena DataLog gagal ditulis.
+            }
         }
 
         public string InsertTopUpMinus(ClsTransaction trans, ClsCard card)
@@ -1077,6 +1534,31 @@ namespace MilenialPark.Controller
             return ds;
         }
 
+        public DataTable GetTicketByTagID(
+    string tagID,
+    string orderStatus,
+    DateTime from,
+    DateTime to)
+        {
+            query =
+                "SELECT TOP 1 " +
+                "TransactionID, NoUrut, TagID, RFID, " +
+                "OrderStatus, TransactionDate " +
+                "FROM WHNPOS.dbo.TransaksiTiketDetail " +
+                "WHERE ISNULL(TagID, '') = " +
+                ClsFungsi.C2Q(tagID) + " " +
+                "AND OrderStatus = " +
+                ClsFungsi.C2Q(orderStatus) + " " +
+                "AND TransactionDate >= " +
+                ClsFungsi.C2QTime(from) + " " +
+                "AND TransactionDate <= " +
+                ClsFungsi.C2QTime(to);
+
+            return ClsStaticVariable.objConnection
+                .objsqlconnection
+                .Filldatatable(query);
+        }
+
 
 
         //public string ExtendOvertime(ClsExtend data2, ClsTransaction trans, ClsCard card)
@@ -1117,7 +1599,7 @@ namespace MilenialPark.Controller
         //        return "Data Transaksi Tiket Gagal Diextend !!! error message = " + ex.Message;
         //    }
 
-            
+
         //}
 
         #endregion

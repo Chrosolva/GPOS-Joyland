@@ -108,13 +108,26 @@ namespace MilenialPark.Controller
             return (dt != null && dt.Rows.Count > 0) ? dt.Rows[0] : null;
         }
 
-        public void TouchLastScan(string tagID, string typeRFID = "")
+        public void TouchLastScan(
+    string tagID,
+    string typeRFID = "")
         {
-            string q =
-                "UPDATE RFIDTags SET LastScan = GETDATE() " +
-                "WHERE TagID = " + ClsFungsi.C2Q(tagID) +
-                (string.IsNullOrWhiteSpace(typeRFID) ? "" : " AND TypeRFID = " + ClsFungsi.C2Q(typeRFID));
-            ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(q);
+            string query =
+                "UPDATE WHNPOS.dbo.RFIDTags " +
+                "SET LastScan = GETDATE() " +
+                "WHERE TagID = " +
+                ClsFungsi.C2Q(tagID);
+
+            if (!string.IsNullOrWhiteSpace(typeRFID))
+            {
+                query +=
+                    " AND TypeRFID = " +
+                    ClsFungsi.C2Q(typeRFID);
+            }
+
+            ClsStaticVariable.objConnection
+                .objSqlServerIUDClass
+                .ExecuteNonQuery(query);
         }
     }
 }
