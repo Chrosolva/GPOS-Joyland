@@ -394,9 +394,9 @@ namespace MilenialPark.Views.Transaction
 
                 #region Build ticket detail
 
-                BuildTicketDetails(
-                    finalTransactionID
-                );
+                BuildTicketDetails(finalTransactionID);
+                BuildOrdinaryDetails(finalTransactionID);
+
 
                 if (controllerTran.objTransaction
                         .listtranstikdet.Count == 0 &&
@@ -731,6 +731,43 @@ namespace MilenialPark.Views.Transaction
 
                 controllerTran.objTransaction
                     .listtranstikdet
+                    .Add(detail);
+            }
+        }
+        private void BuildOrdinaryDetails(
+    string transactionID)
+        {
+            controllerTran.objTransaction.listtransdet =
+                new List<ClsTransactionDetail>();
+
+            foreach (DataGridViewRow row
+                     in dgvTransaksiDetail.Rows)
+            {
+                if (row.IsNewRow)
+                {
+                    continue;
+                }
+
+                ClsTransactionDetail detail =
+                    new ClsTransactionDetail(
+                        transactionID,
+                        DateTime.Now,
+                        Convert.ToString(row.Cells[2].Value),
+                        Convert.ToString(row.Cells[3].Value),
+                        ToDecimalSafe(
+                            row.Cells["Price2"].Value
+                        ),
+                        ToIntSafe(
+                            row.Cells["Qty2"].Value
+                        ),
+                        ToIntSafe(
+                            row.Cells[6].Value
+                        ),
+                        "BOUGHT"
+                    );
+
+                controllerTran.objTransaction
+                    .listtransdet
                     .Add(detail);
             }
         }

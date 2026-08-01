@@ -16,7 +16,8 @@ namespace MilenialPark.Models
         public string ItemName { get; set; }
         public decimal Price { get; set; }
         public int Qty { get; set; }
-        public string OrderStatus { get; set; } 
+        public string OrderStatus { get; set; }
+        public int NoUrut { get; set; }
 
         #endregion
 
@@ -47,6 +48,26 @@ namespace MilenialPark.Models
             this.Price = price;
             this.Qty = qty;
             this.OrderStatus = OrderStatus;
+        }
+
+        public ClsTransactionDetail(
+    string transactionID,
+    DateTime transactionDate,
+    string itemID,
+    string itemName,
+    decimal price,
+    int qty,
+    int noUrut,
+    string orderStatus)
+        {
+            TransactionID = transactionID;
+            TransactionDate = transactionDate;
+            ItemId = itemID;
+            ItemName = itemName;
+            Price = price;
+            Qty = qty;
+            NoUrut = noUrut;
+            OrderStatus = orderStatus;
         }
         #endregion
 

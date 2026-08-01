@@ -387,48 +387,7 @@ namespace MilenialPark.Views.Transaction
             CalculateTotal();
         }
 
-        private void btnPay_Click(object sender, EventArgs e)
-        {
-            CalculateTotal();
-            if (FLNewOrder.Controls.Count != 0)
-            {
-                controllerTrans.AutogenereateTransactionID("TICKET", parentfrm.lblShopID.Text);
-                controllerTrans.objTransaction = new ClsTransaction(controllerTrans.TransactionID, DateTime.Now, Convert.ToDecimal(lblTotal.Text), "", "", parentfrm.lblShopID.Text, "", Convert.ToDecimal(lblSubtotal.Text), Convert.ToDecimal(lblPPN.Text), 0, 0, "NOTPAID");
-
-                controllerTrans.objTransaction.listtransdet = new List<ClsTransactionDetail>();
-                controllerTrans.objTransaction.listtranstikdet = new List<ClsTransactionTiketDetail>();
-
-                foreach (Control x in FLNewOrder.Controls)
-                {
-                    UCOrderItem tmp = (UCOrderItem)x;
-                    tmp.objTransdet.TransactionID = controllerTrans.TransactionID;
-                    controllerTrans.objTransaction.listtransdet.Add(tmp.objTransdet);
-                }
-
-                
-
-                FrmPayment frmPayment = new FrmPayment(controllerTrans);
-                FormBlank frmBlank = new FormBlank();
-                frmBlank.Show();
-                frmPayment.ShowDialog();
-                frmBlank.Close();
-
-                if (ClsStaticVariable.sukses)
-                {
-                    ClsStaticVariable.sukses = false;
-                    FLNewOrder.Controls.Clear();
-                    lblSubtotal.Text = "0";
-                    lblPPN.Text = "0";
-                    chkPPN.Checked = false;
-                    lblTotal.Text = "0";
-                }
-            }
-            else
-            {
-                ClsFungsi.Pesan("Daftar Pesanan Kosong, Mohon diisi terlebih dahulu !!!", "ERROR");
-            }
-
-        }
+        
 
         private void FrmOrder_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -445,19 +404,78 @@ namespace MilenialPark.Views.Transaction
             CalculateTotal();
             if (FLNewOrder.Controls.Count != 0)
             {
-                controllerTrans.AutogenereateTransactionID("TICKET", parentfrm.lblShopID.Text);
+                string shopID =ClsStaticVariable.CurrentShop.ShopID;
+                controllerTrans.AutogenereateTransactionID("TICKET", shopID);
                 controllerTrans.objTransaction = new ClsTransaction(controllerTrans.TransactionID, DateTime.Now, Convert.ToDecimal(lblTotal.Text), "", "", parentfrm.lblShopID.Text, "", Convert.ToDecimal(lblSubtotal.Text), Convert.ToDecimal(lblPPN.Text), 0, 0, "NOTPAID", cbxTransType.Text);
 
                 controllerTrans.objTransaction.listtransdet = new List<ClsTransactionDetail>();
                 controllerTrans.objTransaction.listtranstikdet = new List<ClsTransactionTiketDetail>();
 
-                foreach (Control x in FLNewOrder.Controls)
+                foreach (Control control in FLNewOrder.Controls)
                 {
-                    UCOrderItem tmp = (UCOrderItem)x;
-                    tmp.objTransdet.TransactionID = controllerTrans.TransactionID;
-                    controllerTrans.objTransaction.listtransdet.Add(tmp.objTransdet);
-                    controllerTrans.objTransactionTiketDetail = new ClsTransactionTiketDetail(controllerTrans.TransactionID, DateTime.Now, tmp.objTransdet.ItemId, tmp.objTransdet.ItemName, tmp.objTransdet.Price, tmp.objTransdet.Qty, "BOUGHT", DateTime.Now, DateTime.Now, tmp.WaktuBermain , tmp.Toleransi);
-                    controllerTrans.objTransaction.listtranstikdet.Add(controllerTrans.objTransactionTiketDetail);
+                    UCOrderItem itemControl =
+                        control as UCOrderItem;
+
+                    if (itemControl == null)
+                    {
+                        continue;
+                    }
+
+                    itemControl.objTransdet.TransactionID =
+                        controllerTrans.TransactionID;
+
+                    ClsTransactionTiketDetail ticketDetail =
+                        new ClsTransactionTiketDetail(
+                            transactionid:
+                                controllerTrans.TransactionID,
+
+                            transactiondate:
+                                DateTime.Now,
+
+                            itemid:
+                                itemControl.objTransdet.ItemId,
+
+                            itemname:
+                                itemControl.objTransdet.ItemName,
+
+                            price:
+                                itemControl.objTransdet.Price,
+
+                            qty:
+                                itemControl.objTransdet.Qty,
+
+                            noUrut:
+                                0,
+
+                            orderStatus:
+                                "BOUGHT",
+
+                            jamMasuk:
+                                DateTime.Now,
+
+                            jamKeluar:
+                                DateTime.Now,
+
+                            waktuBermain:
+                                itemControl.WaktuBermain,
+
+                            toleransi:
+                                itemControl.Toleransi
+                        );
+
+                    // listtranstikdet sementara membawa semua item ke FrmPayment.
+                    // FrmPayment akan memisahkan berdasarkan WaktuBermain.
+                    controllerTrans.objTransaction
+                        .listtranstikdet
+                        .Add(ticketDetail);
+
+                    // TransaksiDetail hanya untuk barang non-tiket.
+                    if (itemControl.WaktuBermain <= 0)
+                    {
+                        controllerTrans.objTransaction
+                            .listtransdet
+                            .Add(itemControl.objTransdet);
+                    }
                 }
 
                 FrmPayment frmPayment = new FrmPayment(controllerTrans);
@@ -522,7 +540,8 @@ namespace MilenialPark.Views.Transaction
         public void LoadCardList(object sender, EventArgs e, string CardID, DateTime from, DateTime to)
         {
             FLCardTransList.Controls.Clear();
-            controllerCard.dt = controllerCard.getCardTransactHistoryWithShopID(parentfrm.lblShopID.Text, controllerTrans.objCard.CardID, new DateTime(from.Year, from.Month, from.Day, 0, 0, 0), new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
+            string shopID = ClsStaticVariable.CurrentShop.ShopID;
+            controllerCard.dt = controllerCard.getCardTransactHistoryWithShopID(shopID, controllerTrans.objCard.CardID, new DateTime(from.Year, from.Month, from.Day, 0, 0, 0), new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
             if (controllerCard.dt.Rows.Count != 0)
             {
                 int index = 0;
@@ -556,7 +575,8 @@ namespace MilenialPark.Views.Transaction
 
             DateTime from = dtpFrom.Value;
             DateTime to = dtpTo.Value;
-            ds = controllerReport.LoadTransactionReceipt(objtrans.TransactionID, parentfrm.lblShopID.Text, new DateTime(from.Year, from.Month, from.Day, 0, 0, 0), new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
+            string shopID = ClsStaticVariable.CurrentShop.ShopID;
+            ds = controllerReport.LoadTransactionReceipt(objtrans.TransactionID, shopID, new DateTime(from.Year, from.Month, from.Day, 0, 0, 0), new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
             reportDoc = new MilenialPark.Reports.PrintTransactionReceipt();
             reportDoc.SetDataSource(ds);
 
