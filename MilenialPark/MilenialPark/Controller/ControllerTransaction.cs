@@ -662,6 +662,23 @@ namespace MilenialPark.Controller
                 "INFO"
             );
 
+            InsertDataLogSafe(trans.TransactionID,
+                "DETAIL COUNT BEFORE INSERT. " +
+                "TicketCount=" +
+                (
+                    trans.listtranstikdet == null
+                        ? 0
+                        : trans.listtranstikdet.Count
+                ) +
+                ", OrdinaryCount=" +
+                (
+                    trans.listtransdet == null
+                        ? 0
+                        : trans.listtransdet.Count
+                ),
+                "INFO"
+            );
+
             #region Insert header transaksi
 
             query =
@@ -733,6 +750,181 @@ namespace MilenialPark.Controller
                     "Data transaksi gagal ditambah. " +
                     "Error message: " +
                     ex.Message;
+            }
+
+            #endregion
+
+            #region Insert detail tiket
+
+            if (!ClsStaticVariable.sukses)
+            {
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "3. Ticket Detail ADD CANCELLED karena header gagal.",
+                    "ERROR"
+                );
+
+                return
+                    "Detail tiket tidak dapat ditambahkan karena " +
+                    "header transaksi gagal.";
+            }
+
+            if (trans.listtranstikdet == null)
+            {
+                trans.listtranstikdet =
+                    new List<ClsTransactionTiketDetail>();
+            }
+
+            if (trans.listtranstikdet.Count == 0)
+            {
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "3. Transaction tidak mempunyai detail tiket.",
+                    "INFO"
+                );
+            }
+            else
+            {
+                foreach (
+                    ClsTransactionTiketDetail transdet
+                    in trans.listtranstikdet)
+                {
+                    transdet.TransactionID =
+                        trans.TransactionID;
+
+                    DateTime jamMasuk =
+                        transdet.JamMasuk == DateTime.MinValue
+                            ? DateTime.Now
+                            : transdet.JamMasuk;
+
+                    DateTime jamKeluar =
+                        transdet.JamKeluar == DateTime.MinValue
+                            ? DateTime.Now
+                            : transdet.JamKeluar;
+
+                    string orderStatus =
+                        string.IsNullOrWhiteSpace(
+                            transdet.OrderStatus)
+                            ? "BOUGHT"
+                            : transdet.OrderStatus;
+
+                    query2 =
+                        "INSERT INTO WHNPOS.dbo.TransaksiTiketDetail " +
+                        "(" +
+                        "TransactionID, " +
+                        "TransactionDate, " +
+                        "ItemID, " +
+                        "ItemName, " +
+                        "Price, " +
+                        "Qty, " +
+                        "NoUrut, " +
+                        "OrderStatus, " +
+                        "JamMasuk, " +
+                        "JamKeluar, " +
+                        "WaktuBermain, " +
+                        "Toleransi, " +
+                        "RFID, " +
+                        "TagID, " +
+                        "Keterangan" +
+                        ") VALUES (" +
+                        ClsFungsi.C2Q(
+                            transdet.TransactionID) + ", " +
+                        "GETDATE(), " +
+                        ClsFungsi.C2Q(
+                            transdet.ItemId) + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.ItemName) + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.Price) + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.Qty) + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.NoUrut) + ", " +
+                        ClsFungsi.C2Q(
+                            orderStatus) + ", " +
+                        ClsFungsi.C2QTime(
+                            jamMasuk) + ", " +
+                        ClsFungsi.C2QTime(
+                            jamKeluar) + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.WaktuBermain) + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.Toleransi) + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.RFID ?? "") + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.TagID ?? "") + ", " +
+                        ClsFungsi.C2Q(
+                            transdet.Keterangan ?? "") +
+                        ")";
+
+                    try
+                    {
+                        int affectedTicket =
+                            ClsStaticVariable.objConnection
+                                .objSqlServerIUDClass
+                                .ExecuteNonQuery(query2);
+
+                        InsertDataLogSafe(
+                            trans.TransactionID,
+                            "3. Ticket Detail ADD SUCCESS. " +
+                            "ExecuteNonQueryResult=" +
+                            affectedTicket +
+                            ", NoUrut=" +
+                            transdet.NoUrut +
+                            ", ItemID=" +
+                            transdet.ItemId +
+                            ", ItemName=" +
+                            transdet.ItemName +
+                            ", Qty=" +
+                            transdet.Qty +
+                            ", RFID=" +
+                            transdet.RFID +
+                            ", TagID=" +
+                            transdet.TagID +
+                            ", Query=" +
+                            query2,
+                            "SUCCESS"
+                        );
+                    }
+                    catch (Exception ex)
+                    {
+                        ClsStaticVariable.sukses =
+                            false;
+
+                        InsertDataLogSafe(
+                            trans.TransactionID,
+                            "3. Ticket Detail ADD FAILED. " +
+                            "NoUrut=" +
+                            transdet.NoUrut +
+                            ", ItemID=" +
+                            transdet.ItemId +
+                            ", RFID=" +
+                            transdet.RFID +
+                            ", TagID=" +
+                            transdet.TagID +
+                            ", Error=" +
+                            ex.Message +
+                            ", Query=" +
+                            query2,
+                            "ERROR"
+                        );
+
+                        return
+                            "Detail tiket NoUrut " +
+                            transdet.NoUrut +
+                            " gagal disimpan. " +
+                            ex.Message;
+                    }
+                }
+
+                InsertDataLogSafe(
+                    trans.TransactionID,
+                    "3. Semua Ticket Detail ADD SUCCESS. " +
+                    "TotalTicket=" +
+                    trans.listtranstikdet.Count,
+                    "SUCCESS"
+                );
             }
 
             #endregion

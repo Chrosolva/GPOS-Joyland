@@ -92,72 +92,122 @@ namespace MilenialPark.Views.Transaction
             }
         }
 
-        public void UserControlClick(object sender, EventArgs e, UCShopItem ucshopitem)
+        private void AddShopItemToOrder(
+    UCShopItem selectedShopItem)
         {
-            UCShopItem tmp = ucshopitem;
-            ClsShopItem data = tmp.objShopItem;
-
-
-            //FrmAddOrder frmAddOrder = new FrmAddOrder(data);
-            //FormBlank frmBlank = new FormBlank();
-            //frmBlank.Show();
-            //frmAddOrder.ShowDialog();
-            //frmBlank.Close();
-            //MessageBox.Show("haha");
-
-            // create 
-            ClsTransactionDetail objtransdet = new ClsTransactionDetail("ORDTMP", DateTime.Now, data.ItemID, data.ItemName, data.Price, Convert.ToInt32(1), "NOTSERVED");
-            ClsStaticVariable.objtransdet = objtransdet;
-
-            ClsTransactionTiketDetail objtranstikdet = new ClsTransactionTiketDetail("ORDTMP", DateTime.Now, data.ItemID, data.ItemName, data.Price, Convert.ToInt32(1), "NOTSERVED", DateTime.Now, DateTime.Now, data.WaktuBermain, data.Toleransi);
-            ClsStaticVariable.objtranstikdet = objtranstikdet;
-
-
-            ClsStaticVariable.placeorder = true;
-            ClsStaticVariable.WaktuBermain = data.WaktuBermain;
-            ClsStaticVariable.Toleransi = data.Toleransi;
-
-            // need to change
-            //if (ClsStaticVariable.placeorder)
-            //{
-
-            //}
-
-            bool add = true;
-            if (FLNewOrder.Controls.Count != 0)
+            if (selectedShopItem == null ||
+                selectedShopItem.objShopItem == null)
             {
-                foreach (Control x in FLNewOrder.Controls)
+                return;
+            }
+
+            ClsShopItem data =
+                selectedShopItem.objShopItem;
+
+            ClsTransactionDetail transactionDetail =
+                new ClsTransactionDetail(
+                    "ORDTMP",
+                    DateTime.Now,
+                    data.ItemID,
+                    data.ItemName,
+                    data.Price,
+                    1,
+                    "NOTSERVED"
+                );
+
+            ClsTransactionTiketDetail ticketDetail =
+                new ClsTransactionTiketDetail(
+                    "ORDTMP",
+                    DateTime.Now,
+                    data.ItemID,
+                    data.ItemName,
+                    data.Price,
+                    1,
+                    "NOTSERVED",
+                    DateTime.Now,
+                    DateTime.Now,
+                    data.WaktuBermain,
+                    data.Toleransi
+                );
+
+            UCOrderItem existingOrderItem = null;
+
+            foreach (Control control
+                     in FLNewOrder.Controls)
+            {
+                UCOrderItem orderItem =
+                    control as UCOrderItem;
+
+                if (orderItem == null ||
+                    orderItem.objTransdet == null)
                 {
-                    var uc = (UCOrderItem)x;
-                    if (uc.objTransdet.ItemId == ClsStaticVariable.objtransdet.ItemId)
-                    {
-                        add = false;
-                        uc.NUDQty.Value = uc.NUDQty.Value + ClsStaticVariable.objtransdet.Qty;
-                        break;
-                    }
-                    else
-                    {
-                        add = true;
-                    }
+                    continue;
+                }
+
+                if (string.Equals(
+                    orderItem.objTransdet.ItemId,
+                    data.ItemID,
+                    StringComparison.OrdinalIgnoreCase))
+                {
+                    existingOrderItem =
+                        orderItem;
+
+                    break;
                 }
             }
 
-            if (add)
+            if (existingOrderItem != null)
             {
-                UCOrderItem ucorderItem = new UCOrderItem(ClsStaticVariable.objtransdet, ClsStaticVariable.objtranstikdet);
-                //ucorderItem.index = FLNewOrder.Controls.Count;
-                //ucorderItem.Name = "UC" + ucorderItem.index.ToString();
-                ucorderItem.Name = "UC" + ucorderItem.objTransdet.ItemId.ToString();
-                ucorderItem.btnDelete.Click += (se, ev) => this.OrderDeleteClick(sender, e, ucorderItem.Name);
-                ucorderItem.NUDQty.ValueChanged += (se, ev) => this.NUDValueChanged(sender, e, ucorderItem.Name);
-                ucorderItem.WaktuBermain = ClsStaticVariable.WaktuBermain;
-                ucorderItem.Toleransi = ClsStaticVariable.Toleransi;
-                FLNewOrder.Controls.Add(ucorderItem);
-                ClsStaticVariable.placeorder = false;
+                decimal newQuantity =
+                    existingOrderItem.NUDQty.Value + 1;
+
+                if (newQuantity <=
+                    existingOrderItem.NUDQty.Maximum)
+                {
+                    existingOrderItem.NUDQty.Value =
+                        newQuantity;
+                }
+
                 CalculateSubtotal();
+                return;
             }
 
+            UCOrderItem newOrderItem =
+                new UCOrderItem(
+                    transactionDetail,
+                    ticketDetail
+                );
 
+            newOrderItem.Name =
+                "UC_" + data.ItemID;
+
+            newOrderItem.WaktuBermain =
+                data.WaktuBermain;
+
+            newOrderItem.Toleransi =
+                data.Toleransi;
+
+            newOrderItem.btnDelete.Click +=
+                (se, ev) =>
+                    OrderDeleteClick(
+                        se,
+                        ev,
+                        newOrderItem.Name
+                    );
+
+            newOrderItem.NUDQty.ValueChanged +=
+                (se, ev) =>
+                    NUDValueChanged(
+                        se,
+                        ev,
+                        newOrderItem.Name
+                    );
+
+            FLNewOrder.Controls.Add(
+                newOrderItem
+            );
+
+            CalculateSubtotal();
         }
 
         public void NUDValueChanged(object sender, EventArgs e, string key)
@@ -174,7 +224,9 @@ namespace MilenialPark.Views.Transaction
             CalculateSubtotal();
         }
 
-        public void FillFLPanel(object sender, EventArgs e)
+        public void FillFLPanel(
+    object sender,
+    EventArgs e)
         {
             FLMenu.Controls.Clear();
             listShopItem.Clear();
@@ -207,69 +259,31 @@ namespace MilenialPark.Views.Transaction
                 return;
             }
 
-            foreach (ClsShopItem shopItem
-                     in controllerShop.objShop.listShopitem)
+            foreach (
+                ClsShopItem shopItem
+                in controllerShop.objShop.listShopitem)
             {
                 UCShopItem ucShopItem =
                     new UCShopItem(shopItem);
 
                 ucShopItem.outerpanel.Click +=
-                    (se, ev) =>
-                        UserControlClick(
-                            se,
-                            ev,
-                            ucShopItem
-                        );
+                    ShopItem_Click;
 
                 ucShopItem.contentpanel.Click +=
-                    (se, ev) =>
-                        UserControlClick(
-                            se,
-                            ev,
-                            ucShopItem
-                        );
-
-                //ucShopItem.pbPanel.Click +=
-                //    (se, ev) =>
-                //        UserControlClick(
-                //            se,
-                //            ev,
-                //            ucShopItem
-                //        );
-
-                //ucShopItem.pbShopItem.Click +=
-                //    (se, ev) =>
-                //        UserControlClick(
-                //            se,
-                //            ev,
-                //            ucShopItem
-                //        );
+                    ShopItem_Click;
 
                 ucShopItem.lblItemName.Click +=
-                    (se, ev) =>
-                        UserControlClick(
-                            se,
-                            ev,
-                            ucShopItem
-                        );
+                    ShopItem_Click;
 
                 ucShopItem.lblRP.Click +=
-                    (se, ev) =>
-                        UserControlClick(
-                            se,
-                            ev,
-                            ucShopItem
-                        );
+                    ShopItem_Click;
 
                 ucShopItem.lblItemPrice.Click +=
-                    (se, ev) =>
-                        UserControlClick(
-                            se,
-                            ev,
-                            ucShopItem
-                        );
+                    ShopItem_Click;
 
-                listShopItem.Add(ucShopItem);
+                listShopItem.Add(
+                    ucShopItem
+                );
             }
 
             if (listShopItem.Count > 0)
@@ -387,7 +401,7 @@ namespace MilenialPark.Views.Transaction
             CalculateTotal();
         }
 
-        
+
 
         private void FrmOrder_FormClosing(object sender, FormClosingEventArgs e)
         {
@@ -397,14 +411,14 @@ namespace MilenialPark.Views.Transaction
             parentfrm.cbxCategory.Items.Clear();
         }
 
-        
+
 
         private void btnPay_Click_1(object sender, EventArgs e)
         {
             CalculateTotal();
             if (FLNewOrder.Controls.Count != 0)
             {
-                string shopID =ClsStaticVariable.CurrentShop.ShopID;
+                string shopID = ClsStaticVariable.CurrentShop.ShopID;
                 controllerTrans.AutogenereateTransactionID("TICKET", shopID);
                 controllerTrans.objTransaction = new ClsTransaction(controllerTrans.TransactionID, DateTime.Now, Convert.ToDecimal(lblTotal.Text), "", "", parentfrm.lblShopID.Text, "", Convert.ToDecimal(lblSubtotal.Text), Convert.ToDecimal(lblPPN.Text), 0, 0, "NOTPAID", cbxTransType.Text);
 
@@ -642,7 +656,7 @@ namespace MilenialPark.Views.Transaction
 
         private void cbxTransType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(cbxTransType.SelectedIndex == 0)
+            if (cbxTransType.SelectedIndex == 0)
             {
                 excludecategory = "WEEKEND";
             }
@@ -651,6 +665,46 @@ namespace MilenialPark.Views.Transaction
                 excludecategory = "WEEKDAY";
             }
             FillFLPanel(null, null);
+        }
+
+        private void ShopItem_Click(
+    object sender,
+    EventArgs e)
+        {
+            Control clickedControl =
+                sender as Control;
+
+            UCShopItem clickedShopItem =
+                FindParentShopItem(clickedControl);
+
+            if (clickedShopItem == null)
+            {
+                return;
+            }
+
+            AddShopItemToOrder(clickedShopItem);
+        }
+
+        private UCShopItem FindParentShopItem(
+    Control control)
+        {
+            Control currentControl = control;
+
+            while (currentControl != null)
+            {
+                UCShopItem shopItem =
+                    currentControl as UCShopItem;
+
+                if (shopItem != null)
+                {
+                    return shopItem;
+                }
+
+                currentControl =
+                    currentControl.Parent;
+            }
+
+            return null;
         }
     }
 }
