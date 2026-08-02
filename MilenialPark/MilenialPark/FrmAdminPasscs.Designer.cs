@@ -33,6 +33,8 @@
             this.txtpassword = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.txtUserID = new System.Windows.Forms.TextBox();
+            this.label3 = new System.Windows.Forms.Label();
+            this.txtRemarks = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // btnVerify
@@ -43,7 +45,7 @@
             this.btnVerify.IconChar = FontAwesome.Sharp.IconChar.None;
             this.btnVerify.IconColor = System.Drawing.Color.Black;
             this.btnVerify.IconFont = FontAwesome.Sharp.IconFont.Auto;
-            this.btnVerify.Location = new System.Drawing.Point(121, 190);
+            this.btnVerify.Location = new System.Drawing.Point(106, 256);
             this.btnVerify.Name = "btnVerify";
             this.btnVerify.Size = new System.Drawing.Size(123, 50);
             this.btnVerify.TabIndex = 30;
@@ -88,19 +90,39 @@
             this.txtUserID.Name = "txtUserID";
             this.txtUserID.Size = new System.Drawing.Size(263, 26);
             this.txtUserID.TabIndex = 26;
-            this.txtUserID.Text = "starlight";
             // 
-            // FrmAdminPasscs
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Font = new System.Drawing.Font("Segoe UI", 12.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label3.Location = new System.Drawing.Point(63, 183);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(84, 23);
+            this.label3.TabIndex = 32;
+            this.label3.Text = "REMARKS";
+            // 
+            // txtRemarks
+            // 
+            this.txtRemarks.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.txtRemarks.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.txtRemarks.Location = new System.Drawing.Point(64, 209);
+            this.txtRemarks.Name = "txtRemarks";
+            this.txtRemarks.Size = new System.Drawing.Size(263, 26);
+            this.txtRemarks.TabIndex = 31;
+            // 
+            // FrmAdminPass
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(391, 288);
+            this.ClientSize = new System.Drawing.Size(391, 336);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.txtRemarks);
             this.Controls.Add(this.btnVerify);
             this.Controls.Add(this.label2);
             this.Controls.Add(this.txtpassword);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.txtUserID);
-            this.Name = "FrmAdminPasscs";
+            this.Name = "FrmAdminPass";
             this.Text = "FrmAdminPasscs";
             this.ResumeLayout(false);
             this.PerformLayout();
@@ -114,5 +136,7 @@
         public System.Windows.Forms.TextBox txtpassword;
         private System.Windows.Forms.Label label1;
         public System.Windows.Forms.TextBox txtUserID;
+        private System.Windows.Forms.Label label3;
+        public System.Windows.Forms.TextBox txtRemarks;
     }
 }

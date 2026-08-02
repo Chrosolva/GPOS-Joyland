@@ -245,7 +245,7 @@ namespace MilenialPark.Views.Transaction
 
         private void btnPrintQR_Click(object sender, EventArgs e)
         {
-            if(dgvTransTiket.Rows.Count > 0)
+            if (dgvTransTiket.Rows.Count > 0)
             {
                 string tmp;
                 string tmp2;
@@ -254,7 +254,7 @@ namespace MilenialPark.Views.Transaction
                 // get list ticket and 
                 foreach (DataGridViewRow row in dgvTransTiketDetail.Rows)
                 {
-                    if(row.Cells["category"].Value.ToString() != "ACTIVITY")
+                    if (row.Cells["category"].Value.ToString() != "ACTIVITY")
                     {
                         tmp = "(&" + row.Cells["TransactionID"].Value.ToString() + "&" + row.Cells["NoUrut"].Value.ToString() + ")";
                         tmp2 = row.Cells["ItemName"].Value.ToString();
@@ -292,13 +292,13 @@ namespace MilenialPark.Views.Transaction
                 DialogResult result = MessageBox.Show("Data Ticket berhasil Diload !!! \n Lanjut Cetak Ticket ?", "Print Ticket ? ", buttons);
                 if (result == DialogResult.Yes)
                 {
-                    if(listQrCodes.Count > 0)
+                    if (listQrCodes.Count > 0)
                     {
                         PrintQRCode(reportQRDoc2);
                     }
                     else
                     {
-                        
+
                     }
                 }
                 else
@@ -336,7 +336,7 @@ namespace MilenialPark.Views.Transaction
 
         private void btnExtendTicket_Click(object sender, EventArgs e)
         {
-            if(dgvTransTiketDetail.Rows.Count > 0 && dgvTransTiketDetail.CurrentRow.Cells["OrderStatus"].Value.ToString() == "OVERTIME")
+            if (dgvTransTiketDetail.Rows.Count > 0 && dgvTransTiketDetail.CurrentRow.Cells["OrderStatus"].Value.ToString() == "OVERTIME")
             {
                 FrmChangeTicketStatus frmCTStatus = new FrmChangeTicketStatus(dgvTransTiketDetail.CurrentRow.Cells["TransactionID"].Value.ToString(), Convert.ToInt32(dgvTransTiketDetail.CurrentRow.Cells["NoUrut"].Value), ClsStaticVariable.CurrentShop.ShopID);
                 frmCTStatus.ShowDialog();
@@ -351,11 +351,11 @@ namespace MilenialPark.Views.Transaction
 
         private void btnEdit_Click(object sender, EventArgs e)
         {
-            if(ClsStaticVariable.controllerUser.objUser.TipeUser == "Admin")
+            if (ClsStaticVariable.controllerUser.objUser.TipeUser == "Admin")
             {
-                if(dgvTransTiket.Rows.Count != 0)
+                if (dgvTransTiket.Rows.Count != 0)
                 {
-                    
+
                 }
             }
             else
@@ -540,5 +540,7 @@ namespace MilenialPark.Views.Transaction
             FrmScanQRCODE frmScan = new FrmScanQRCODE();
             frmScan.ShowDialog();
         }
+
+
     }
 }
