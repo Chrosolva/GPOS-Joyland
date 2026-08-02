@@ -172,9 +172,68 @@ namespace MilenialPark.Controller
 
         public DataTable gettransactionTiketDetail(string TransactionID)
         {
-            query = $" Select TRD.*, isNULL(SHT.Category, 'ACTIVITY') as category from WHNPOS.dbo.TransaksiTiketDetail as TRD left join WHNPOS.dbo.ShopItemTiket as SHT " + 
+            query = $" Select TRD.*, isNULL(SHT.Category, 'ACTIVITY') as category from WHNPOS.dbo.TransaksiTiketDetail as TRD left join WHNPOS.dbo.ShopItemTiket as SHT " +
                     $" on TRD.ItemID = SHT.ItemID where TRD.TransactionID = {ClsFungsi.C2Q(TransactionID)} Order By TRD.NoUrut asc";
             return ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(query);
+        }
+
+        public DataTable GetCombinedTransactionDetails(
+    string transactionID)
+        {
+            query =
+                "SELECT " +
+                "    TTD.TransactionID, " +
+                "    TTD.TransactionDate, " +
+                "    TTD.ItemID, " +
+                "    TTD.ItemName, " +
+                "    ISNULL(TTD.Price, 0) AS Price, " +
+                "    ISNULL(TTD.Qty, 0) AS Qty, " +
+                "    ISNULL(TTD.NoUrut, 0) AS NoUrut, " +
+                "    ISNULL(TTD.OrderStatus, '') AS OrderStatus, " +
+                "    TTD.JamMasuk, " +
+                "    TTD.JamKeluar, " +
+                "    ISNULL(TTD.WaktuBermain, 0) AS WaktuBermain, " +
+                "    ISNULL(TTD.Toleransi, 0) AS Toleransi, " +
+                "    ISNULL(TTD.RFID, '') AS RFID, " +
+                "    ISNULL(TTD.TagID, '') AS TagID, " +
+                "    ISNULL(TTD.Keterangan, '') AS Keterangan, " +
+                "    ISNULL(SIT.Category, 'ACTIVITY') AS Category, " +
+                "    'TICKET' AS DetailType " +
+                "FROM WHNPOS.dbo.TransaksiTiketDetail TTD " +
+                "LEFT JOIN WHNPOS.dbo.ShopItemTiket SIT " +
+                "    ON TTD.ItemID = SIT.ItemID " +
+                "WHERE TTD.TransactionID = " +
+                ClsFungsi.C2Q(transactionID) + " " +
+
+                "UNION ALL " +
+
+                "SELECT " +
+                "    TD.TransactionID, " +
+                "    TD.TransactionDate, " +
+                "    TD.ItemID, " +
+                "    TD.ItemName, " +
+                "    ISNULL(TD.Price, 0) AS Price, " +
+                "    ISNULL(TD.Qty, 0) AS Qty, " +
+                "    ISNULL(TD.NoUrut, 0) AS NoUrut, " +
+                "    ISNULL(TD.OrderStatus, '') AS OrderStatus, " +
+                "    CAST(NULL AS DATETIME) AS JamMasuk, " +
+                "    CAST(NULL AS DATETIME) AS JamKeluar, " +
+                "    0 AS WaktuBermain, " +
+                "    0 AS Toleransi, " +
+                "    '' AS RFID, " +
+                "    '' AS TagID, " +
+                "    '' AS Keterangan, " +
+                "    'ITEM' AS Category, " +
+                "    'ITEM' AS DetailType " +
+                "FROM WHNPOS.dbo.TransaksiDetail TD " +
+                "WHERE TD.TransactionID = " +
+                ClsFungsi.C2Q(transactionID) + " " +
+
+                "ORDER BY NoUrut, DetailType DESC";
+
+            return ClsStaticVariable.objConnection
+                .objsqlconnection
+                .Filldatatable(query);
         }
 
         public DataTable getOnetransactionTiketDetail(string TransactionID, int NoUrut)

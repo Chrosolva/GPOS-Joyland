@@ -52,7 +52,7 @@ namespace MilenialPark.Views.Transaction
 
         private void btnCreate_Click(object sender, EventArgs e)
         {
-            FrmNEOrderTiket frmNEOrderTiket = new FrmNEOrderTiket(parentfrm.lblShopID.Text);
+            FrmNEOrderTiket frmNEOrderTiket = new FrmNEOrderTiket(ClsStaticVariable.CurrentShop.ShopID);
             frmNEOrderTiket.Tag = "ADD";
             frmNEOrderTiket.lblFormTitle.Text = "Add Tiket Order";
             frmNEOrderTiket.btnAddorEdit.Image = Resource.tab;
@@ -67,74 +67,180 @@ namespace MilenialPark.Views.Transaction
             btnFilter_Click(sender, e);
         }
 
-        private void FrmOrderTiket_Load(object sender, EventArgs e)
+        private void FrmOrderTiket_Load(
+    object sender,
+    EventArgs e)
         {
+            if (ClsStaticVariable.CurrentShop == null)
+            {
+                ClsFungsi.Pesan(
+                    "Universal Shop belum dimuat. " +
+                    "Silakan login kembali.",
+                    "ERROR"
+                );
+
+                BeginInvoke(new Action(Close));
+                return;
+            }
+
+            dtpFrom.Value =
+                DateTime.Today;
+
+            dtpTo.Value =
+                DateTime.Today;
+
             from = dtpFrom.Value;
             to = dtpTo.Value;
+
             cbxOption.SelectedIndex = 0;
             cbxTransType.SelectedIndex = 0;
-            hasShop();
+
+            ApplyUserPermission();
+
             btnFilter_Click(null, null);
         }
 
-        public void hasShop()
+        private void ApplyUserPermission()
         {
-            if (controllerShop.checkCashier(ClsStaticVariable.controllerUser.objUser.UserID))
-            {
-                //btnCreate.Enabled = false;
-                btnEdit.Enabled = true;
-                controllerShop.getcashier(ClsStaticVariable.controllerUser.objUser.UserID);
-                if (controllerShop.objShop.ShopName.Trim() != "")
-                {
-                    parentfrm.lblShopID.Visible = true;
-                    parentfrm.lblShopName.Visible = true;
-                    parentfrm.lblMainProduct.Visible = true;
-                    parentfrm.lblAddress.Visible = true;
+            bool isAdmin =
+                ClsStaticVariable.controllerUser != null &&
+                ClsStaticVariable.controllerUser.objUser != null &&
+                string.Equals(
+                    ClsStaticVariable
+                        .controllerUser
+                        .objUser
+                        .TipeUser,
+                    "Admin",
+                    StringComparison.OrdinalIgnoreCase
+                );
 
-                    parentfrm.lblShopID.Text = controllerShop.objShop.ShopID;
-                    parentfrm.lblShopName.Text = controllerShop.objShop.ShopName;
-                    parentfrm.lblMainProduct.Text = controllerShop.objShop.MainProduct;
-                    parentfrm.lblAddress.Text = controllerShop.objShop.Address;
-                }
-                btnDelete.Enabled = true;
+            btnEdit.Enabled = isAdmin;
+            btnDelete.Enabled = isAdmin;
+        }
+
+        public void btnFilter_Click(
+    object sender,
+    EventArgs e)
+        {
+            if (ClsStaticVariable.CurrentShop == null)
+            {
+                ClsFungsi.Pesan(
+                    "Universal Shop belum dimuat.",
+                    "ERROR"
+                );
+
+                return;
+            }
+
+            string shopID =
+                ClsStaticVariable.CurrentShop.ShopID;
+
+            SearchCard =
+                txtCardID.Text.Trim();
+
+            string searchOption =
+                GetSafeSearchOption(cbxOption.Text);
+
+            string transactionType =
+                cbxTransType.Text == "ALL"
+                    ? "%"
+                    : cbxTransType.Text;
+
+            DateTime dateFrom =
+                new DateTime(
+                    dtpFrom.Value.Year,
+                    dtpFrom.Value.Month,
+                    dtpFrom.Value.Day,
+                    0,
+                    0,
+                    0
+                );
+
+            DateTime dateTo =
+                new DateTime(
+                    dtpTo.Value.Year,
+                    dtpTo.Value.Month,
+                    dtpTo.Value.Day,
+                    23,
+                    59,
+                    59
+                );
+
+            controllerTrans.dt =
+                controllerTrans.getTransaction2(
+                    shopID,
+                    dateFrom,
+                    dateTo,
+                    SearchCard,
+                    searchOption,
+                    transactionType
+                );
+
+            bind.DataSource =
+                controllerTrans.dt;
+
+            dgvTransTiket.DataSource =
+                bind;
+
+            lblrow.Text =
+                "Row Count : " +
+                controllerTrans.dt.Rows.Count;
+
+            if (controllerTrans.dt.Rows.Count > 0)
+            {
+                dgvTransTiket.ClearSelection();
+
+                dgvTransTiket.CurrentCell =
+                    dgvTransTiket.Rows[0]
+                        .Cells["TransactionID"];
+
+                dgvTransTiket.Rows[0].Selected =
+                    true;
+
+                LoadSelectedTransactionDetails();
             }
             else
             {
-                //btnCreate.Enabled = true;
-                btnEdit.Enabled = false;
-                //btnImport.Enabled = false;
-                btnDelete.Enabled = false;
+                dgvTransTiketDetail.DataSource =
+                    null;
+
+                bind2.DataSource =
+                    null;
             }
         }
 
-        public void btnFilter_Click(object sender, EventArgs e)
+        private string GetSafeSearchOption(
+    string selectedOption)
         {
-            if (txtCardID.Text.Trim().Length == 0)
+            switch (selectedOption)
             {
-                SearchCard = ""; 
-            }
-            else
-            {
-                SearchCard = txtCardID.Text;
-            }
+                case "TransactionID":
+                    return "TransactionID";
 
-            controllerTrans.dt = controllerTrans.getTransaction2(parentfrm.lblShopID.Text, new DateTime(dtpFrom.Value.Year, dtpFrom.Value.Month, dtpFrom.Value.Day, 0, 0, 0), new DateTime(dtpTo.Value.Year, dtpTo.Value.Month, dtpTo.Value.Day, 23, 59, 59), SearchCard, cbxOption.Text, cbxTransType.Text.Replace("ALL", "%%"));
-            if (controllerTrans.dt.Rows.Count != 0)
-            {
-                lblrow.Text = "Row Count :" + controllerTrans.dt.Rows.Count.ToString();
-                bind.DataSource = controllerTrans.dt;
-                dgvTransTiket.DataSource = bind;
-                dt2 = controllerTrans.gettransactionTiketDetail(dgvTransTiket.CurrentRow.Cells["TransactionID"].Value.ToString());
-                bind2.DataSource = dt2;
-                dgvTransTiketDetail.DataSource = bind2;
+                case "CardID":
+                    return "CardID";
+
+                case "Remarks":
+                    return "Remarks";
+
+                case "PaymentType":
+                    return "PaymentType";
+
+                default:
+                    return "TransactionID";
             }
         }
 
-        private void dgvTransTiket_SelectionChanged(object sender, EventArgs e)
+        private void dgvTransTiket_SelectionChanged(
+    object sender,
+    EventArgs e)
         {
-            dt2 = controllerTrans.gettransactionTiketDetail(dgvTransTiket.CurrentRow.Cells["TransactionID"].Value.ToString());
-            bind2.DataSource = dt2;
-            dgvTransTiketDetail.DataSource = bind2;
+            if (dgvTransTiket.DataSource == null)
+            {
+                return;
+            }
+
+            LoadSelectedTransactionDetails();
         }
 
         private void btnPrintQR_Click(object sender, EventArgs e)
@@ -232,7 +338,7 @@ namespace MilenialPark.Views.Transaction
         {
             if(dgvTransTiketDetail.Rows.Count > 0 && dgvTransTiketDetail.CurrentRow.Cells["OrderStatus"].Value.ToString() == "OVERTIME")
             {
-                FrmChangeTicketStatus frmCTStatus = new FrmChangeTicketStatus(dgvTransTiketDetail.CurrentRow.Cells["TransactionID"].Value.ToString(), Convert.ToInt32(dgvTransTiketDetail.CurrentRow.Cells["NoUrut"].Value), parentfrm.lblShopID.Text);
+                FrmChangeTicketStatus frmCTStatus = new FrmChangeTicketStatus(dgvTransTiketDetail.CurrentRow.Cells["TransactionID"].Value.ToString(), Convert.ToInt32(dgvTransTiketDetail.CurrentRow.Cells["NoUrut"].Value), ClsStaticVariable.CurrentShop.ShopID);
                 frmCTStatus.ShowDialog();
 
                 btnFilter_Click(null, null);
@@ -266,7 +372,7 @@ namespace MilenialPark.Views.Transaction
 
                 DateTime from = dtpFrom.Value;
                 DateTime to = dtpTo.Value;
-                ds = controllerReport.LoadTransactionReceipt2(dgvTransTiket.CurrentRow.Cells["TransactionID"].Value.ToString(), parentfrm.lblShopID.Text, new DateTime(from.Year, from.Month, from.Day, 0, 0, 0), new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
+                ds = controllerReport.LoadTransactionReceipt2(dgvTransTiket.CurrentRow.Cells["TransactionID"].Value.ToString(), ClsStaticVariable.CurrentShop.ShopID, new DateTime(from.Year, from.Month, from.Day, 0, 0, 0), new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
                 string sub3 = dgvTransTiket.CurrentRow.Cells["TransactionID"].Value.ToString().Substring(0, 3);
                 if (sub3 == "TRK" || sub3 == "TRR")
                 {
@@ -288,28 +394,74 @@ namespace MilenialPark.Views.Transaction
             }
         }
 
-        private void txtCardID_KeyUp(object sender, KeyEventArgs e)
+        private void txtCardID_KeyUp(
+    object sender,
+    KeyEventArgs e)
         {
-            if(e.KeyCode == Keys.Enter)
+            if (e.KeyCode != Keys.Enter)
             {
-                if(cbxOption.Text == "CardID")
-                {
-                    txtCardID.Text = Convert.ToInt32(txtCardID.Text).ToString();
-                }
-                else
-                {
-                    txtCardID.Text = txtCardID.Text;
-                }
-
-                btnFilter_Click(null, null);
+                return;
             }
 
-            
+            e.SuppressKeyPress = true;
+
+            if (cbxOption.Text == "CardID")
+            {
+                txtCardID.Text =
+                    ClsFungsi.NormalizeCardID(
+                        txtCardID.Text
+                    );
+            }
+
+            btnFilter_Click(null, null);
         }
 
         private void cbxTransType_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void LoadSelectedTransactionDetails()
+        {
+            dgvTransTiketDetail.DataSource = null;
+            bind2.DataSource = null;
+            dt2.Clear();
+
+            if (dgvTransTiket.CurrentRow == null ||
+                dgvTransTiket.CurrentRow.IsNewRow)
+            {
+                return;
+            }
+
+            object transactionValue =
+                dgvTransTiket.CurrentRow
+                    .Cells["TransactionID"]
+                    .Value;
+
+            if (transactionValue == null ||
+                transactionValue == DBNull.Value)
+            {
+                return;
+            }
+
+            string transactionID =
+                transactionValue.ToString().Trim();
+
+            if (string.IsNullOrWhiteSpace(transactionID))
+            {
+                return;
+            }
+
+            dt2 =
+                controllerTrans.GetCombinedTransactionDetails(
+                    transactionID
+                );
+
+            bind2.DataSource = dt2;
+            dgvTransTiketDetail.DataSource = bind2;
+
+            lblDetailRow.Text =
+                "Detail Count : " + dt2.Rows.Count;
         }
 
         private void btnPreview_Click(object sender, EventArgs e)
