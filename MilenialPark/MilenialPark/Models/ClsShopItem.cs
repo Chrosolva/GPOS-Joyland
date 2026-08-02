@@ -24,6 +24,7 @@ namespace MilenialPark.Models
         public int WaktuBermain { get; set; }
         public int Toleransi { get; set; }
         public string CategoryId { get; set; }
+        public string ItemSource { get; set; }
 
 
 

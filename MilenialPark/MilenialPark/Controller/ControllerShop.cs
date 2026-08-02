@@ -457,13 +457,44 @@ namespace MilenialPark.Controller
                 new List<ClsShopItem>();
 
             query =
-                "Select * " +
-                "from WHNPOS.dbo.GetUnionShopItem() " +
-                "where ShopID = " +
-                ClsFungsi.C2Q(shopID) + " " +
-                "and ISNULL(TopUpAmount, 0) = 0 " +
-                "and ISNULL(Category, '') <> " +
-                ClsFungsi.C2Q(category);
+    "SELECT " +
+    "    SI.ItemID, " +
+    "    SI.ShopID, " +
+    "    SI.ItemName, " +
+    "    ISNULL(SI.Price, 0) AS Price, " +
+    "    ISNULL(SI.ItemDesc, '') AS ItemDesc, " +
+    "    ISNULL(SI.ImageFilePath, '') AS ImageFilePath, " +
+    "    ISNULL(SI.Category, '') AS Category, " +
+    "    ISNULL(SI.TopUpAmount, 0) AS TopUpAmount, " +
+    "    0 AS WaktuBermain, " +
+    "    0 AS Toleransi, " +
+    "    'ITEM' AS ItemSource " +
+    "FROM WHNPOS.dbo.ShopItem SI " +
+    "WHERE SI.ShopID = " +
+    ClsFungsi.C2Q(shopID) + " " +
+    "AND ISNULL(SI.TopUpAmount, 0) = 0 " +
+
+    "UNION ALL " +
+
+    "SELECT " +
+    "    ST.ItemID, " +
+    "    ST.ShopID, " +
+    "    ST.ItemName, " +
+    "    ISNULL(ST.Price, 0) AS Price, " +
+    "    ISNULL(ST.ItemDesc, '') AS ItemDesc, " +
+    "    ISNULL(ST.ImageFilePath, '') AS ImageFilePath, " +
+    "    ISNULL(ST.Category, '') AS Category, " +
+    "    0 AS TopUpAmount, " +
+    "    ISNULL(ST.WaktuBermain, 0) AS WaktuBermain, " +
+    "    ISNULL(ST.Toleransi, 0) AS Toleransi, " +
+    "    'TICKET' AS ItemSource " +
+    "FROM WHNPOS.dbo.ShopItemTiket ST " +
+    "WHERE ST.ShopID = " +
+    ClsFungsi.C2Q(shopID) + " " +
+    "AND ISNULL(ST.Category, '') <> " +
+    ClsFungsi.C2Q(category) + " " +
+
+    "ORDER BY ItemSource, ItemName";
 
             dt = ClsStaticVariable.objConnection
                 .objsqlconnection
@@ -504,6 +535,7 @@ namespace MilenialPark.Controller
                                 row["Toleransi"]
                             )
                     );
+                item.ItemSource = row["ItemSource"].ToString();
 
                 objShop.listShopitem.Add(item);
             }
