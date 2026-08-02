@@ -92,48 +92,230 @@ namespace MilenialPark.Views.Transaction
             }
         }
 
-        private void AddShopItemToOrder(
-    UCShopItem selectedShopItem)
+        public void FillFLPanel(
+    object sender,
+    EventArgs e)
         {
-            if (selectedShopItem == null ||
-                selectedShopItem.objShopItem == null)
+            FLMenu.SuspendLayout();
+
+            try
+            {
+                FLMenu.Controls.Clear();
+                listShopItem.Clear();
+
+                if (!ValidateUniversalShop())
+                {
+                    return;
+                }
+
+                string shopID =
+                    ClsStaticVariable.CurrentShop.ShopID;
+
+                bool loaded =
+                    controllerShop.getShopandShopItem2Union(
+                        shopID,
+                        excludecategory
+                    );
+
+                if (!loaded ||
+                    controllerShop.objShop == null ||
+                    controllerShop.objShop.listShopitem == null)
+                {
+                    ClsFungsi.Pesan(
+                        "Gagal memuat item Universal Shop.",
+                        "ERROR"
+                    );
+
+                    return;
+                }
+
+                HashSet<string> loadedItemKeys =
+                    new HashSet<string>(
+                        StringComparer.OrdinalIgnoreCase
+                    );
+
+                foreach (
+                    ClsShopItem shopItem
+                    in controllerShop.objShop.listShopitem)
+                {
+                    if (shopItem == null ||
+                        string.IsNullOrWhiteSpace(shopItem.ItemID))
+                    {
+                        continue;
+                    }
+
+                    string itemKey =
+                        (shopItem.ItemSource ?? "") +
+                        "|" +
+                        shopItem.ItemID.Trim();
+
+                    if (!loadedItemKeys.Add(itemKey))
+                    {
+                        MessageBox.Show(
+                            "Ditemukan menu yang benar-benar duplikat:\n\n" +
+                            "Key: " + itemKey + "\n" +
+                            "ItemName: " + shopItem.ItemName,
+                            "Duplicate Menu",
+                            MessageBoxButtons.OK,
+                            MessageBoxIcon.Error
+                        );
+
+                        continue;
+                    }
+
+                    UCShopItem itemControl =
+                        new UCShopItem(shopItem);
+
+                    itemControl.Name =
+                        "SHOPITEM_" +
+                        MakeSafeControlName(itemKey);
+
+                    WireShopItemClick(
+                        itemControl,
+                        itemControl
+                    );
+
+                    listShopItem.Add(
+                        itemControl
+                    );
+                }
+
+                FLMenu.Controls.AddRange(
+                    listShopItem.ToArray()
+                );
+            }
+            finally
+            {
+                FLMenu.ResumeLayout(true);
+            }
+        }
+
+        private string MakeSafeControlName(
+    string value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+            {
+                return "EMPTY";
+            }
+
+            StringBuilder result =
+                new StringBuilder();
+
+            foreach (char character in value)
+            {
+                if (char.IsLetterOrDigit(character) ||
+                    character == '_')
+                {
+                    result.Append(character);
+                }
+                else
+                {
+                    result.Append('_');
+                }
+            }
+
+            return result.ToString();
+        }
+
+        private void WireShopItemClick(
+    Control control,
+    UCShopItem owner)
+        {
+            if (control == null || owner == null)
             {
                 return;
             }
 
-            ClsShopItem data =
-                selectedShopItem.objShopItem;
+            // Pastikan handler tidak terpasang dua kali.
+            control.Click -= ShopItemControl_Click;
+            control.Click += ShopItemControl_Click;
 
-            ClsTransactionDetail transactionDetail =
-                new ClsTransactionDetail(
-                    "ORDTMP",
-                    DateTime.Now,
-                    data.ItemID,
-                    data.ItemName,
-                    data.Price,
-                    1,
-                    "NOTSERVED"
+            // Semua child menyimpan reference ke UCShopItem pemiliknya.
+            control.Tag =
+                owner;
+
+            foreach (Control child in control.Controls)
+            {
+                WireShopItemClick(
+                    child,
+                    owner
+                );
+            }
+        }
+
+        private void ShopItemControl_Click(
+    object sender,
+    EventArgs e)
+        {
+            Control clickedControl =
+                sender as Control;
+
+            if (clickedControl == null)
+            {
+                return;
+            }
+
+            UCShopItem owner =
+                clickedControl.Tag as UCShopItem;
+
+            if (owner == null ||
+                owner.objShopItem == null)
+            {
+                return;
+            }
+
+            ClsShopItem selectedItem =
+                owner.objShopItem;
+
+            System.Diagnostics.Debug.WriteLine(
+                "CLICKED CONTROL=" +
+                clickedControl.Name +
+                " | ITEM ID=" +
+                selectedItem.ItemID +
+                " | ITEM NAME=" +
+                selectedItem.ItemName
+            );
+
+            AddItemToOrder(
+                selectedItem
+            );
+        }
+
+        private void AddItemToOrder(
+    ClsShopItem selectedItem)
+        {
+            if (selectedItem == null)
+            {
+                return;
+            }
+
+            string selectedSource =
+    (selectedItem.ItemSource ?? "")
+        .Trim();
+
+            string selectedItemID =
+                (selectedItem.ItemID ?? "").Trim();
+
+            string selectedItemName =
+                (selectedItem.ItemName ?? "").Trim();
+
+            if (selectedItemID.Length == 0)
+            {
+                ClsFungsi.Pesan(
+                    "ItemID kosong untuk item " +
+                    selectedItemName,
+                    "ERROR"
                 );
 
-            ClsTransactionTiketDetail ticketDetail =
-                new ClsTransactionTiketDetail(
-                    "ORDTMP",
-                    DateTime.Now,
-                    data.ItemID,
-                    data.ItemName,
-                    data.Price,
-                    1,
-                    "NOTSERVED",
-                    DateTime.Now,
-                    DateTime.Now,
-                    data.WaktuBermain,
-                    data.Toleransi
-                );
+                return;
+            }
 
-            UCOrderItem existingOrderItem = null;
+            UCOrderItem existingItem =
+                null;
 
-            foreach (Control control
-                     in FLNewOrder.Controls)
+            foreach (
+                Control control
+                in FLNewOrder.Controls)
             {
                 UCOrderItem orderItem =
                     control as UCOrderItem;
@@ -144,155 +326,94 @@ namespace MilenialPark.Views.Transaction
                     continue;
                 }
 
-                if (string.Equals(
-                    orderItem.objTransdet.ItemId,
-                    data.ItemID,
-                    StringComparison.OrdinalIgnoreCase))
-                {
-                    existingOrderItem =
-                        orderItem;
+                string existingItemID =
+    (orderItem.objTransdet.ItemId ?? "")
+        .Trim();
 
+                string existingSource =
+                    (orderItem.ItemSource ?? "")
+                        .Trim();
+
+                bool sameSource =
+                    string.Equals(
+                        existingSource,
+                        selectedSource,
+                        StringComparison.OrdinalIgnoreCase
+                    );
+
+                bool sameItemID =
+                    string.Equals(
+                        existingItemID,
+                        selectedItemID,
+                        StringComparison.OrdinalIgnoreCase
+                    );
+
+                if (sameSource && sameItemID)
+                {
+                    existingItem = orderItem;
                     break;
                 }
             }
 
-            if (existingOrderItem != null)
+            if (existingItem != null)
             {
-                decimal newQuantity =
-                    existingOrderItem.NUDQty.Value + 1;
+                decimal nextQuantity =
+                    existingItem.NUDQty.Value + 1;
 
-                if (newQuantity <=
-                    existingOrderItem.NUDQty.Maximum)
+                if (nextQuantity <=
+                    existingItem.NUDQty.Maximum)
                 {
-                    existingOrderItem.NUDQty.Value =
-                        newQuantity;
+                    existingItem.NUDQty.Value =
+                        nextQuantity;
                 }
 
-                CalculateSubtotal();
                 return;
             }
 
-            UCOrderItem newOrderItem =
-                new UCOrderItem(
-                    transactionDetail,
-                    ticketDetail
-                );
+            // lanjutkan pembuatan item baru...
+        }
 
-            newOrderItem.Name =
-                "UC_" + data.ItemID;
+        private void RemoveOrderItem(
+    UCOrderItem orderItem)
+        {
+            if (orderItem == null)
+            {
+                return;
+            }
 
-            newOrderItem.WaktuBermain =
-                data.WaktuBermain;
-
-            newOrderItem.Toleransi =
-                data.Toleransi;
-
-            newOrderItem.btnDelete.Click +=
-                (se, ev) =>
-                    OrderDeleteClick(
-                        se,
-                        ev,
-                        newOrderItem.Name
-                    );
-
-            newOrderItem.NUDQty.ValueChanged +=
-                (se, ev) =>
-                    NUDValueChanged(
-                        se,
-                        ev,
-                        newOrderItem.Name
-                    );
-
-            FLNewOrder.Controls.Add(
-                newOrderItem
+            FLNewOrder.Controls.Remove(
+                orderItem
             );
 
+            orderItem.Dispose();
+
             CalculateSubtotal();
         }
 
-        public void NUDValueChanged(object sender, EventArgs e, string key)
+        private void UpdateOrderQuantity(
+    UCOrderItem orderItem)
         {
-            UCOrderItem tmp = (UCOrderItem)FLNewOrder.Controls[key];
-            tmp.lblQty.Text = tmp.NUDQty.Value.ToString();
-            tmp.objTransdet.Qty = Convert.ToInt32(tmp.NUDQty.Value);
-            CalculateSubtotal();
-        }
-
-        public void OrderDeleteClick(object sender, EventArgs e, string key)
-        {
-            FLNewOrder.Controls.RemoveByKey(key);
-            CalculateSubtotal();
-        }
-
-        public void FillFLPanel(
-    object sender,
-    EventArgs e)
-        {
-            FLMenu.Controls.Clear();
-            listShopItem.Clear();
-
-            if (!ValidateUniversalShop())
+            if (orderItem == null ||
+                orderItem.objTransdet == null)
             {
                 return;
             }
 
-            string shopID =
-                ClsStaticVariable.CurrentShop.ShopID;
-
-            bool loaded =
-                controllerShop.getShopandShopItem2Union(
-                    shopID,
-                    excludecategory
+            int quantity =
+                Convert.ToInt32(
+                    orderItem.NUDQty.Value
                 );
 
-            if (!loaded ||
-                controllerShop.objShop == null ||
-                controllerShop.objShop.listShopitem == null)
-            {
-                ClsFungsi.Pesan(
-                    "Gagal memuat item untuk Universal Shop '" +
-                    shopID +
-                    "'.",
-                    "ERROR"
-                );
+            orderItem.objTransdet.Qty =
+                quantity;
 
-                return;
-            }
+            orderItem.lblQty.Text =
+                quantity.ToString();
 
-            foreach (
-                ClsShopItem shopItem
-                in controllerShop.objShop.listShopitem)
-            {
-                UCShopItem ucShopItem =
-                    new UCShopItem(shopItem);
-
-                ucShopItem.outerpanel.Click +=
-                    ShopItem_Click;
-
-                ucShopItem.contentpanel.Click +=
-                    ShopItem_Click;
-
-                ucShopItem.lblItemName.Click +=
-                    ShopItem_Click;
-
-                ucShopItem.lblRP.Click +=
-                    ShopItem_Click;
-
-                ucShopItem.lblItemPrice.Click +=
-                    ShopItem_Click;
-
-                listShopItem.Add(
-                    ucShopItem
-                );
-            }
-
-            if (listShopItem.Count > 0)
-            {
-                FLMenu.Controls.AddRange(
-                    listShopItem.ToArray()
-                );
-            }
+            CalculateSubtotal();
         }
+
+
 
         private bool ValidateUniversalShop()
         {
@@ -420,7 +541,22 @@ namespace MilenialPark.Views.Transaction
             {
                 string shopID = ClsStaticVariable.CurrentShop.ShopID;
                 controllerTrans.AutogenereateTransactionID("TICKET", shopID);
-                controllerTrans.objTransaction = new ClsTransaction(controllerTrans.TransactionID, DateTime.Now, Convert.ToDecimal(lblTotal.Text), "", "", parentfrm.lblShopID.Text, "", Convert.ToDecimal(lblSubtotal.Text), Convert.ToDecimal(lblPPN.Text), 0, 0, "NOTPAID", cbxTransType.Text);
+                controllerTrans.objTransaction =
+    new ClsTransaction(
+        controllerTrans.TransactionID,
+        DateTime.Now,
+        Convert.ToDecimal(lblTotal.Text),
+        "",
+        "",
+        shopID,
+        "",
+        Convert.ToDecimal(lblSubtotal.Text),
+        Convert.ToDecimal(lblPPN.Text),
+        0,
+        0,
+        "NOTPAID",
+        cbxTransType.Text
+    );
 
                 controllerTrans.objTransaction.listtransdet = new List<ClsTransactionDetail>();
                 controllerTrans.objTransaction.listtranstikdet = new List<ClsTransactionTiketDetail>();
@@ -665,46 +801,6 @@ namespace MilenialPark.Views.Transaction
                 excludecategory = "WEEKDAY";
             }
             FillFLPanel(null, null);
-        }
-
-        private void ShopItem_Click(
-    object sender,
-    EventArgs e)
-        {
-            Control clickedControl =
-                sender as Control;
-
-            UCShopItem clickedShopItem =
-                FindParentShopItem(clickedControl);
-
-            if (clickedShopItem == null)
-            {
-                return;
-            }
-
-            AddShopItemToOrder(clickedShopItem);
-        }
-
-        private UCShopItem FindParentShopItem(
-    Control control)
-        {
-            Control currentControl = control;
-
-            while (currentControl != null)
-            {
-                UCShopItem shopItem =
-                    currentControl as UCShopItem;
-
-                if (shopItem != null)
-                {
-                    return shopItem;
-                }
-
-                currentControl =
-                    currentControl.Parent;
-            }
-
-            return null;
         }
     }
 }

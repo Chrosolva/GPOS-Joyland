@@ -23,6 +23,7 @@ namespace MilenialPark.UserControls
 
         public ClsTransactionDetail objTransdet = new ClsTransactionDetail();
         public ClsTransactionTiketDetail objTranstikdet = new ClsTransactionTiketDetail();
+        public string ItemSource { get; set; }
 
         #endregion
         public UCOrderItem()
