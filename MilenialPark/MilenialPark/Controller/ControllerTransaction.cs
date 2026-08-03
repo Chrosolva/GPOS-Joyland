@@ -1699,6 +1699,103 @@ namespace MilenialPark.Controller
                 .Filldatatable(query);
         }
 
+        public void InsertGateLog(string logMessage, string logReason, string userId)
+        {
+            // Pastikan kolom di GateLog adalah NVARCHAR biar aman (tidak truncate)
+            // LogMessage/Reason juga sebaiknya cukup panjang (misal 200-500).
+            string msg = (logMessage ?? "").Trim();
+            string reason = (logReason ?? "").Trim();
+            string uid = (userId ?? "").Trim();
+
+            // Optional truncate supaya aman kalau kolom kecil
+            if (msg.Length > 300) msg = msg.Substring(0, 300);
+            if (reason.Length > 100) reason = reason.Substring(0, 100);
+            if (uid.Length > 50) uid = uid.Substring(0, 50);
+
+            string sql =
+                "INSERT INTO WHNPOS.dbo.GateLog (LogDate, LogMessage, LogReason, UserID) VALUES (" +
+                "GETDATE(), " +
+                ClsFungsi.C2Q(msg) + ", " +
+                ClsFungsi.C2Q(reason) + ", " +
+                ClsFungsi.C2Q(uid) +
+                ");";
+
+            ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(sql);
+        }
+
+        public void UpdateTicketRfid(string transactionId, int noUrut, string newTagId, string newRfidName, string appendKeterangan)
+        {
+            string tid = (transactionId ?? "").Trim();
+            string tagNew = (newTagId ?? "").Trim();
+            string nameNew = (newRfidName ?? "").Trim();
+
+            if (string.IsNullOrEmpty(tid)) throw new Exception("TransactionID kosong.");
+            if (noUrut <= 0) throw new Exception("NoUrut tidak valid.");
+            if (string.IsNullOrEmpty(tagNew)) throw new Exception("TagID baru kosong.");
+            if (string.IsNullOrEmpty(nameNew)) throw new Exception("RFIDName kosong.");
+
+            // validasi: TagID baru belum dipakai ticket lain (hari ini)
+            DateTime startDay = DateTime.Today;
+            DateTime endDay = DateTime.Today.AddDays(1).AddTicks(-1);
+
+            string qCheck =
+                "SELECT TOP 1 1 FROM WHNPOS.dbo.TransaksiTiketDetail " +
+                "WHERE ISNULL(TagID,'') = " + ClsFungsi.C2Q(tagNew) + " " +
+                "AND TransactionDate >= " + ClsFungsi.C2QTime(startDay) + " " +
+                "AND TransactionDate <= " + ClsFungsi.C2QTime(endDay) + " ;";
+
+            var dt = ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(qCheck);
+            if (dt != null && dt.Rows.Count > 0)
+                throw new Exception("TagID baru sudah dipakai ticket lain (hari ini).");
+
+            string ketAppend = (appendKeterangan ?? "").Trim();
+            if (ketAppend.Length > 200) ketAppend = ketAppend.Substring(0, 200);
+
+            string sql =
+                "UPDATE WHNPOS.dbo.TransaksiTiketDetail " +
+                "SET RFID = " + ClsFungsi.C2Q(nameNew) + ", " +          // RFID = RFIDName
+                "    TagID = " + ClsFungsi.C2Q(tagNew) + ", " +          // TagID = RFID asli
+                "    Keterangan = ISNULL(Keterangan,'') + " + ClsFungsi.C2Q(" | " + ketAppend) + " " +
+                "WHERE TransactionID = " + ClsFungsi.C2Q(tid) + " AND NoUrut = " + noUrut.ToString() + ";";
+
+            ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(sql);
+        }
+
+        public void UpdateOrderStatusOnly(string transactionId, int noUrut, string status)
+        {
+            string sql =
+                "UPDATE WHNPOS.dbo.TransaksiTiketDetail " +
+                "SET OrderStatus = " + ClsFungsi.C2Q(status) + " " +
+                "WHERE TransactionID = " + ClsFungsi.C2Q(transactionId) + " " +
+                "  AND NoUrut = " + noUrut.ToString() + ";";
+
+            ClsStaticVariable.objConnection.objSqlServerIUDClass.ExecuteNonQuery(sql);
+        }
+
+        public DataTable GetReminderEnterIn(DateTime start, DateTime end)
+        {
+            query =
+    "SELECT TRD.TransactionID, TRD.NoUrut, TRD.RFID, TRD.TagID, TRD.Keterangan, TRD.ItemID, TRD.ItemName, " +
+    "TRD.JamMasuk, TRD.JamKeluar, TRD.WaktuBermain, TRD.Toleransi, TRD.OrderStatus, TR.TransactionDate " +
+    "FROM WHNPOS.dbo.TransaksiTiketDetail TRD " +
+    "INNER JOIN WHNPOS.dbo.Transaksi TR ON TRD.TransactionID = TR.TransactionID " +
+    $"WHERE TRD.OrderStatus = 'ENTER-IN' " +
+    $"AND TR.TransactionDate >= {ClsFungsi.C2QTime(start)} " +
+    $"AND TR.TransactionDate <= {ClsFungsi.C2QTime(end)} " +
+    "ORDER BY TRD.JamKeluar ASC";
+
+            return ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(query);
+        }
+
+        public DataTable GetGateLogTop(int top = 200)
+        {
+            string sql =
+                "SELECT TOP " + top.ToString() + " LogID, LogDate, LogMessage, LogReason, UserID " +
+                "FROM WHNPOS.dbo.GateLog " +
+                "ORDER BY LogID DESC;";
+
+            return ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(sql);
+        }
 
 
         //public string ExtendOvertime(ClsExtend data2, ClsTransaction trans, ClsCard card)
