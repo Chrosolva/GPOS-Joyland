@@ -281,8 +281,7 @@ namespace MilenialPark.Views.Transaction
             );
         }
 
-        private void AddItemToOrder(
-    ClsShopItem selectedItem)
+        private void AddItemToOrder(ClsShopItem selectedItem)
         {
             if (selectedItem == null)
             {
