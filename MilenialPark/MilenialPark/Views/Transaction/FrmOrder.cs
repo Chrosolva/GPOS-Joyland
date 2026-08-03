@@ -370,6 +370,66 @@ namespace MilenialPark.Views.Transaction
             }
 
             // lanjutkan pembuatan item baru...
+            ClsTransactionDetail transactionDetail =
+    new ClsTransactionDetail(
+        "ORDTMP",
+        DateTime.Now,
+        selectedItemID,
+        selectedItemName,
+        selectedItem.Price,
+        1,
+        "NOTSERVED"
+    );
+
+            ClsTransactionTiketDetail ticketDetail =
+                new ClsTransactionTiketDetail(
+                    "ORDTMP",
+                    DateTime.Now,
+                    selectedItemID,
+                    selectedItemName,
+                    selectedItem.Price,
+                    1,
+                    "NOTSERVED",
+                    DateTime.Now,
+                    DateTime.Now,
+                    selectedItem.WaktuBermain,
+                    selectedItem.Toleransi
+                );
+
+            UCOrderItem newOrderItem =
+                new UCOrderItem(
+                    transactionDetail,
+                    ticketDetail
+                );
+
+            newOrderItem.Name =
+                "ORDERITEM_" +
+                MakeSafeControlName(
+                    selectedSource + "_" + selectedItemID
+                );
+
+            newOrderItem.ItemSource = selectedSource;
+            newOrderItem.WaktuBermain = selectedItem.WaktuBermain;
+            newOrderItem.Toleransi = selectedItem.Toleransi;
+
+            newOrderItem.NUDQty.Minimum = 1;
+            newOrderItem.NUDQty.Value = 1;
+
+            newOrderItem.btnDelete.Click +=
+                delegate
+                {
+                    RemoveOrderItem(newOrderItem);
+                };
+
+            newOrderItem.NUDQty.ValueChanged +=
+                delegate
+                {
+                    UpdateOrderQuantity(newOrderItem);
+                };
+
+            FLNewOrder.Controls.Add(newOrderItem);
+
+            UpdateOrderQuantity(newOrderItem);
         }
 
         private void RemoveOrderItem(
