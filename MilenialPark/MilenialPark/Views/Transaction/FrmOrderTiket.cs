@@ -384,13 +384,13 @@ namespace MilenialPark.Views.Transaction
                 }
                 reportDoc.SetDataSource(ds);
 
-                //FrmShowReport frmShowReport = new FrmShowReport(reportDoc);
-                //FormBlank frmBlank = new FormBlank();
-                //frmBlank.Show();
-                //frmShowReport.ShowDialog();
-                //frmBlank.Close();
+                FrmShowReport frmShowReport = new FrmShowReport(reportDoc);
+                FormBlank frmBlank = new FormBlank();
+                frmBlank.Show();
+                frmShowReport.ShowDialog();
+                frmBlank.Close();
 
-                reportDoc.PrintToPrinter(1, false, 0, 0);
+                //reportDoc.PrintToPrinter(1, false, 0, 0);
             }
         }
 

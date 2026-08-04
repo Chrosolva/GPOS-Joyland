@@ -1682,8 +1682,21 @@ namespace MilenialPark.Controller
         {
             query =
                 "SELECT TOP 1 " +
-                "TransactionID, NoUrut, TagID, RFID, " +
-                "OrderStatus, TransactionDate " +
+                "    TransactionID, " +
+                "    TransactionDate, " +
+                "    ItemID, " +
+                "    ItemName, " +
+                "    Price, " +
+                "    Qty, " +
+                "    NoUrut, " +
+                "    OrderStatus, " +
+                "    JamMasuk, " +
+                "    JamKeluar, " +
+                "    WaktuBermain, " +
+                "    Toleransi, " +
+                "    RFID, " +
+                "    TagID, " +
+                "    Keterangan " +
                 "FROM WHNPOS.dbo.TransaksiTiketDetail " +
                 "WHERE ISNULL(TagID, '') = " +
                 ClsFungsi.C2Q(tagID) + " " +
@@ -1692,7 +1705,8 @@ namespace MilenialPark.Controller
                 "AND TransactionDate >= " +
                 ClsFungsi.C2QTime(from) + " " +
                 "AND TransactionDate <= " +
-                ClsFungsi.C2QTime(to);
+                ClsFungsi.C2QTime(to) + " " +
+                "ORDER BY TransactionDate DESC, NoUrut DESC";
 
             return ClsStaticVariable.objConnection
                 .objsqlconnection

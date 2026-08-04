@@ -51,6 +51,7 @@
             this.btnVerify.TabIndex = 30;
             this.btnVerify.Text = "VERIFY";
             this.btnVerify.UseVisualStyleBackColor = false;
+            this.btnVerify.Click += new System.EventHandler(this.btnVerify_Click);
             // 
             // label2
             // 
