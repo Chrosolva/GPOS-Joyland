@@ -84,7 +84,7 @@
             this.leftpanel.Dock = System.Windows.Forms.DockStyle.Left;
             this.leftpanel.Location = new System.Drawing.Point(0, 0);
             this.leftpanel.Name = "leftpanel";
-            this.leftpanel.Size = new System.Drawing.Size(404, 658);
+            this.leftpanel.Size = new System.Drawing.Size(404, 716);
             this.leftpanel.TabIndex = 1;
             // 
             // label9
@@ -282,7 +282,7 @@
             this.btnSave.ForeColor = System.Drawing.Color.OrangeRed;
             this.btnSave.Image = ((System.Drawing.Image)(resources.GetObject("btnSave.Image")));
             this.btnSave.ImageAlign = System.Drawing.ContentAlignment.BottomLeft;
-            this.btnSave.Location = new System.Drawing.Point(91, 579);
+            this.btnSave.Location = new System.Drawing.Point(145, 634);
             this.btnSave.Name = "btnSave";
             this.btnSave.Padding = new System.Windows.Forms.Padding(7);
             this.btnSave.Size = new System.Drawing.Size(188, 54);
@@ -330,7 +330,7 @@
             this.rightpanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rightpanel.Location = new System.Drawing.Point(404, 0);
             this.rightpanel.Name = "rightpanel";
-            this.rightpanel.Size = new System.Drawing.Size(822, 658);
+            this.rightpanel.Size = new System.Drawing.Size(822, 716);
             this.rightpanel.TabIndex = 2;
             // 
             // crViewer
@@ -341,7 +341,7 @@
             this.crViewer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.crViewer.Location = new System.Drawing.Point(0, 51);
             this.crViewer.Name = "crViewer";
-            this.crViewer.Size = new System.Drawing.Size(822, 607);
+            this.crViewer.Size = new System.Drawing.Size(822, 665);
             this.crViewer.TabIndex = 0;
             // 
             // panel1
@@ -368,7 +368,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1226, 658);
+            this.ClientSize = new System.Drawing.Size(1226, 716);
             this.Controls.Add(this.rightpanel);
             this.Controls.Add(this.leftpanel);
             this.Name = "FrmReports";

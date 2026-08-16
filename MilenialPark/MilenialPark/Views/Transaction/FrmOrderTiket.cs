@@ -83,6 +83,11 @@ namespace MilenialPark.Views.Transaction
                 return;
             }
 
+            DataGridViewHelper.ApplyPOSStyle(dgvTransTiket);
+            DataGridViewHelper.ApplyPOSStyle(dgvTransTiketDetail);
+            DataGridViewHelper.SizeCompact(dgvTransTiket, 100, 420);
+            DataGridViewHelper.SizeCompact(dgvTransTiketDetail, 100, 420);
+
             dtpFrom.Value =
                 DateTime.Today;
 
@@ -384,13 +389,13 @@ namespace MilenialPark.Views.Transaction
                 }
                 reportDoc.SetDataSource(ds);
 
-                //FrmShowReport frmShowReport = new FrmShowReport(reportDoc);
-                //FormBlank frmBlank = new FormBlank();
-                //frmBlank.Show();
-                //frmShowReport.ShowDialog();
-                //frmBlank.Close();
+                FrmShowReport frmShowReport = new FrmShowReport(reportDoc);
+                FormBlank frmBlank = new FormBlank();
+                frmBlank.Show();
+                frmShowReport.ShowDialog();
+                frmBlank.Close();
 
-                reportDoc.PrintToPrinter(1, false, 0, 0);
+                //reportDoc.PrintToPrinter(1, false, 0, 0);
             }
         }
 

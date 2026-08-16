@@ -120,6 +120,7 @@
             this.dgvReminder.Name = "dgvReminder";
             this.dgvReminder.Size = new System.Drawing.Size(1000, 349);
             this.dgvReminder.TabIndex = 0;
+            this.dgvReminder.SelectionChanged += new System.EventHandler(this.dgvReminder_SelectionChanged);
             // 
             // panel1
             // 
@@ -159,6 +160,7 @@
             this.btnExit.TabIndex = 69;
             this.btnExit.Text = "EXIT";
             this.btnExit.UseVisualStyleBackColor = false;
+            this.btnExit.Click += new System.EventHandler(this.btnExit_Click);
             // 
             // btnEnter
             // 
@@ -172,6 +174,7 @@
             this.btnEnter.TabIndex = 68;
             this.btnEnter.Text = "ENTER";
             this.btnEnter.UseVisualStyleBackColor = false;
+            this.btnEnter.Click += new System.EventHandler(this.btnEnter_Click);
             // 
             // txtPerson
             // 
@@ -227,6 +230,7 @@
             this.btnChange.TabIndex = 60;
             this.btnChange.Text = "Change";
             this.btnChange.UseVisualStyleBackColor = false;
+            this.btnChange.Click += new System.EventHandler(this.btnChange_Click);
             // 
             // label10
             // 
@@ -260,6 +264,7 @@
             this.txtNewRFID.Name = "txtNewRFID";
             this.txtNewRFID.Size = new System.Drawing.Size(136, 26);
             this.txtNewRFID.TabIndex = 62;
+            this.txtNewRFID.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtNewRFID_KeyDown);
             // 
             // lblmanual
             // 
@@ -285,6 +290,7 @@
             this.btnSend.TabIndex = 51;
             this.btnSend.Text = "Send";
             this.btnSend.UseVisualStyleBackColor = false;
+            this.btnSend.Click += new System.EventHandler(this.btnSend_Click);
             // 
             // txtCurRFID
             // 
@@ -293,6 +299,7 @@
             this.txtCurRFID.Name = "txtCurRFID";
             this.txtCurRFID.Size = new System.Drawing.Size(136, 26);
             this.txtCurRFID.TabIndex = 60;
+            this.txtCurRFID.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtCurRFID_KeyDown);
             // 
             // txtGateCode
             // 
@@ -420,6 +427,7 @@
             this.btnUpdate.TabIndex = 59;
             this.btnUpdate.Text = "Update";
             this.btnUpdate.UseVisualStyleBackColor = false;
+            this.btnUpdate.Click += new System.EventHandler(this.btnUpdate_Click);
             // 
             // label7
             // 
@@ -517,6 +525,7 @@
             this.btnClear.TabIndex = 49;
             this.btnClear.Text = "Clear";
             this.btnClear.UseVisualStyleBackColor = false;
+            this.btnClear.Click += new System.EventHandler(this.btnClear_Click);
             // 
             // btnDisc
             // 
@@ -530,6 +539,7 @@
             this.btnDisc.TabIndex = 48;
             this.btnDisc.Text = "Disconnect";
             this.btnDisc.UseVisualStyleBackColor = false;
+            this.btnDisc.Click += new System.EventHandler(this.btnDisc_Click);
             // 
             // btnConn
             // 
@@ -543,6 +553,7 @@
             this.btnConn.TabIndex = 47;
             this.btnConn.Text = "Connect";
             this.btnConn.UseVisualStyleBackColor = false;
+            this.btnConn.Click += new System.EventHandler(this.btnConn_Click);
             // 
             // btnRefrs
             // 
@@ -556,6 +567,7 @@
             this.btnRefrs.TabIndex = 46;
             this.btnRefrs.Text = "Refresh";
             this.btnRefrs.UseVisualStyleBackColor = false;
+            this.btnRefrs.Click += new System.EventHandler(this.btnRefrs_Click);
             // 
             // PortStatus
             // 

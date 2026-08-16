@@ -423,5 +423,13 @@ namespace MilenialPark.Views
             //frmMainOrder.Show();
             this.OpenChildForm(frmCabang);
         }
+
+        private void btnRFIDManagement_Click(object sender, EventArgs e)
+        {
+            Admin.FrmRFIDManagement frmRFID = new Admin.FrmRFIDManagement();
+            frmRFID.Text = "RFID MANAGEMENT";
+            //frmMainOrder.Show();
+            this.OpenChildForm(frmRFID);
+        }
     }
 }

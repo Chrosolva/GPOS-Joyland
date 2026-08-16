@@ -66,7 +66,6 @@ namespace MilenialPark.Views
             SetupReminderGrid();
 
             DataGridViewHelper.ApplyPOSStyle(dgvReminder);
-
             DataGridViewHelper.ApplyPOSStyle(dgvGateLog);
 
             if (!_reminderGridSized)
@@ -554,12 +553,26 @@ namespace MilenialPark.Views
                     ? Convert.ToInt32(row["WaktuBermain"])
                     : 0;
 
-                int toleransi = row["Toleransi"] == DBNull.Value ? 0 : Convert.ToInt32(row["Toleransi"]);
+                int toleransi = 0;
+
+                if (row.Table.Columns.Contains("Toleransi") &&
+                    row["Toleransi"] != DBNull.Value)
+                {
+                    toleransi =
+                        Convert.ToInt32(row["Toleransi"]);
+                }
 
                 string currentStatus = Convert.ToString(row["OrderStatus"] ?? "").Trim().ToUpper();
 
                 DateTime now = DateTime.Now;
-                DateTime jamKeluar = row["JamKeluar"] == DBNull.Value ? DateTime.MinValue : Convert.ToDateTime(row["JamKeluar"]);
+                DateTime jamKeluar = DateTime.MinValue;
+
+                if (row.Table.Columns.Contains("JamKeluar") &&
+                    row["JamKeluar"] != DBNull.Value)
+                {
+                    jamKeluar =
+                        Convert.ToDateTime(row["JamKeluar"]);
+                }
 
                 // =========================
                 // VALIDASI WAKTU
@@ -677,11 +690,23 @@ namespace MilenialPark.Views
 
                 int noUrut = row["NoUrut"] == DBNull.Value ? 0 : Convert.ToInt32(row["NoUrut"]);
 
-                DateTime jamKeluar = row["JamKeluar"] == DBNull.Value
-                    ? DateTime.MinValue
-                    : Convert.ToDateTime(row["JamKeluar"]);
+                DateTime jamKeluar = DateTime.MinValue;
 
-                int toleransi = row["Toleransi"] == DBNull.Value ? 0 : Convert.ToInt32(row["Toleransi"]);
+                if (row.Table.Columns.Contains("JamKeluar") &&
+                    row["JamKeluar"] != DBNull.Value)
+                {
+                    jamKeluar =
+                        Convert.ToDateTime(row["JamKeluar"]);
+                }
+
+                int toleransi = 0;
+
+                if (row.Table.Columns.Contains("Toleransi") &&
+                    row["Toleransi"] != DBNull.Value)
+                {
+                    toleransi =
+                        Convert.ToInt32(row["Toleransi"]);
+                }
 
                 DateTime now = DateTime.Now;
 

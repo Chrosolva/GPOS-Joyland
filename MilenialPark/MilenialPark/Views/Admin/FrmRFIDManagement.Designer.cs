@@ -80,6 +80,7 @@
             this.btnSave.TabIndex = 51;
             this.btnSave.Text = "Save";
             this.btnSave.UseVisualStyleBackColor = true;
+            this.btnSave.Click += new System.EventHandler(this.btnSave_Click);
             // 
             // RFIDStatus
             // 
@@ -146,6 +147,7 @@
             this.btnReset.Text = "Reset";
             this.btnReset.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnReset.UseVisualStyleBackColor = true;
+            this.btnReset.Click += new System.EventHandler(this.btnReset_Click);
             // 
             // lblCardID2
             // 
@@ -165,6 +167,8 @@
             this.txtSearch.Name = "txtSearch";
             this.txtSearch.Size = new System.Drawing.Size(381, 29);
             this.txtSearch.TabIndex = 56;
+            this.txtSearch.TextChanged += new System.EventHandler(this.txtSearch_TextChanged);
+            this.txtSearch.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtSearch_KeyDown);
             // 
             // panel1
             // 
@@ -201,6 +205,7 @@
             this.dgvRFIDList.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.dgvRFIDList.Size = new System.Drawing.Size(456, 550);
             this.dgvRFIDList.TabIndex = 18;
+            this.dgvRFIDList.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.dgvRFIDList_CellClick);
             // 
             // rightbottompanel
             // 
@@ -220,6 +225,8 @@
             this.txtRFID.Name = "txtRFID";
             this.txtRFID.Size = new System.Drawing.Size(327, 29);
             this.txtRFID.TabIndex = 43;
+            this.txtRFID.Enter += new System.EventHandler(this.txtRFID_Enter);
+            this.txtRFID.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtRFID_KeyDown);
             // 
             // lblNewOrder
             // 
@@ -280,6 +287,7 @@
             this.Controls.Add(this.leftpanel);
             this.Name = "FrmRFIDManagement";
             this.Text = "FrmRFIDManagement";
+            this.Load += new System.EventHandler(this.FrmRFIDManagement_Load);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvRFIDList)).EndInit();

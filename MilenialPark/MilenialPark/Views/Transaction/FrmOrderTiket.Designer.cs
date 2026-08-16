@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle3 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle1 = new System.Windows.Forms.DataGridViewCellStyle();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmOrderTiket));
-            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle4 = new System.Windows.Forms.DataGridViewCellStyle();
+            System.Windows.Forms.DataGridViewCellStyle dataGridViewCellStyle2 = new System.Windows.Forms.DataGridViewCellStyle();
             this.leftpanel = new System.Windows.Forms.Panel();
             this.leftbottompanel = new System.Windows.Forms.Panel();
             this.dgvTransTiket = new System.Windows.Forms.DataGridView();
@@ -62,8 +62,8 @@
             this.dgvTransTiketDetail = new System.Windows.Forms.DataGridView();
             this.rightuppanel = new System.Windows.Forms.Panel();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.label13 = new System.Windows.Forms.Label();
             this.lblDetailRow = new System.Windows.Forms.Label();
+            this.label13 = new System.Windows.Forms.Label();
             this.leftpanel.SuspendLayout();
             this.leftbottompanel.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.dgvTransTiket)).BeginInit();
@@ -103,14 +103,14 @@
             this.dgvTransTiket.AllowUserToDeleteRows = false;
             this.dgvTransTiket.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.DisplayedCells;
             this.dgvTransTiket.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle3.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle3.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle3.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle3.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle3.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(72)))), ((int)(((byte)(115)))));
-            dataGridViewCellStyle3.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle3.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvTransTiket.DefaultCellStyle = dataGridViewCellStyle3;
+            dataGridViewCellStyle1.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle1.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle1.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle1.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle1.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(72)))), ((int)(((byte)(115)))));
+            dataGridViewCellStyle1.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle1.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvTransTiket.DefaultCellStyle = dataGridViewCellStyle1;
             this.dgvTransTiket.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvTransTiket.Location = new System.Drawing.Point(10, 10);
             this.dgvTransTiket.Name = "dgvTransTiket";
@@ -182,6 +182,7 @@
             this.btnPreview.Text = "PREVIEW";
             this.btnPreview.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnPreview.UseVisualStyleBackColor = false;
+            this.btnPreview.Visible = false;
             this.btnPreview.Click += new System.EventHandler(this.btnPreview_Click);
             // 
             // label4
@@ -280,6 +281,7 @@
             this.btnPrintQR.Text = "QR";
             this.btnPrintQR.TextAlign = System.Drawing.ContentAlignment.MiddleRight;
             this.btnPrintQR.UseVisualStyleBackColor = false;
+            this.btnPrintQR.Visible = false;
             this.btnPrintQR.Click += new System.EventHandler(this.btnPrintQR_Click);
             // 
             // txtCardID
@@ -476,14 +478,14 @@
             this.dgvTransTiketDetail.AllowUserToDeleteRows = false;
             this.dgvTransTiketDetail.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.DisplayedCells;
             this.dgvTransTiketDetail.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridViewCellStyle4.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
-            dataGridViewCellStyle4.BackColor = System.Drawing.SystemColors.Window;
-            dataGridViewCellStyle4.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            dataGridViewCellStyle4.ForeColor = System.Drawing.SystemColors.ControlText;
-            dataGridViewCellStyle4.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(72)))), ((int)(((byte)(115)))));
-            dataGridViewCellStyle4.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
-            dataGridViewCellStyle4.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
-            this.dgvTransTiketDetail.DefaultCellStyle = dataGridViewCellStyle4;
+            dataGridViewCellStyle2.Alignment = System.Windows.Forms.DataGridViewContentAlignment.MiddleLeft;
+            dataGridViewCellStyle2.BackColor = System.Drawing.SystemColors.Window;
+            dataGridViewCellStyle2.Font = new System.Drawing.Font("Segoe UI", 9.75F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            dataGridViewCellStyle2.ForeColor = System.Drawing.SystemColors.ControlText;
+            dataGridViewCellStyle2.SelectionBackColor = System.Drawing.Color.FromArgb(((int)(((byte)(247)))), ((int)(((byte)(72)))), ((int)(((byte)(115)))));
+            dataGridViewCellStyle2.SelectionForeColor = System.Drawing.SystemColors.HighlightText;
+            dataGridViewCellStyle2.WrapMode = System.Windows.Forms.DataGridViewTriState.False;
+            this.dgvTransTiketDetail.DefaultCellStyle = dataGridViewCellStyle2;
             this.dgvTransTiketDetail.Dock = System.Windows.Forms.DockStyle.Fill;
             this.dgvTransTiketDetail.Location = new System.Drawing.Point(10, 10);
             this.dgvTransTiketDetail.Name = "dgvTransTiketDetail";
@@ -511,16 +513,6 @@
             this.panel1.Size = new System.Drawing.Size(1311, 27);
             this.panel1.TabIndex = 3;
             // 
-            // label13
-            // 
-            this.label13.AutoSize = true;
-            this.label13.Font = new System.Drawing.Font("Segoe UI Semibold", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.label13.Location = new System.Drawing.Point(6, -2);
-            this.label13.Name = "label13";
-            this.label13.Size = new System.Drawing.Size(165, 25);
-            this.label13.TabIndex = 35;
-            this.label13.Text = "Transaction Detail";
-            // 
             // lblDetailRow
             // 
             this.lblDetailRow.AutoSize = true;
@@ -530,6 +522,16 @@
             this.lblDetailRow.Size = new System.Drawing.Size(59, 21);
             this.lblDetailRow.TabIndex = 77;
             this.lblDetailRow.Text = "detail : ";
+            // 
+            // label13
+            // 
+            this.label13.AutoSize = true;
+            this.label13.Font = new System.Drawing.Font("Segoe UI Semibold", 14F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label13.Location = new System.Drawing.Point(6, -2);
+            this.label13.Name = "label13";
+            this.label13.Size = new System.Drawing.Size(165, 25);
+            this.label13.TabIndex = 35;
+            this.label13.Text = "Transaction Detail";
             // 
             // FrmOrderTiket
             // 

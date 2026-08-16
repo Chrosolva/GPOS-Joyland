@@ -524,19 +524,19 @@ namespace MilenialPark.Views.Transaction
 
                 #region Printing
 
-                try
-                {
-                    PrintQR(controllerTran);
-                }
-                catch (Exception ex)
-                {
-                    ClsFungsi.Pesan(
-                        "Transaksi berhasil disimpan, tetapi " +
-                        "QR Code gagal dicetak.\n" +
-                        ex.Message,
-                        "WARNING"
-                    );
-                }
+                //try
+                //{
+                //    PrintQR(controllerTran);
+                //}
+                //catch (Exception ex)
+                //{
+                //    ClsFungsi.Pesan(
+                //        "Transaksi berhasil disimpan, tetapi " +
+                //        "QR Code gagal dicetak.\n" +
+                //        ex.Message,
+                //        "WARNING"
+                //    );
+                //}
 
                 try
                 {
@@ -875,13 +875,13 @@ namespace MilenialPark.Views.Transaction
             }
             reportDoc.SetDataSource(ds);
 
-            //FrmShowReport frmShowReport = new FrmShowReport(reportDoc);
-            //FormBlank frmBlank = new FormBlank();
-            //frmBlank.Show();
-            //frmShowReport.ShowDialog();
-            //frmBlank.Close();
+            FrmShowReport frmShowReport = new FrmShowReport(reportDoc);
+            FormBlank frmBlank = new FormBlank();
+            frmBlank.Show();
+            frmShowReport.ShowDialog();
+            frmBlank.Close();
 
-            reportDoc.PrintToPrinter(1, false, 0, 0);
+            //reportDoc.PrintToPrinter(1, false, 0, 0);
         }
 
         private void cbxRemarks_SelectedIndexChanged(object sender, EventArgs e)
@@ -933,6 +933,11 @@ namespace MilenialPark.Views.Transaction
                 BeginInvoke(new Action(Close));
                 return;
             }
+
+            DataGridViewHelper.ApplyPOSStyle(dgvTransacTiketDet);
+            DataGridViewHelper.SizeCompact(dgvTransacTiketDet, 100, 420);
+            DataGridViewHelper.ApplyPOSStyle(dgvTransaksiDetail);
+            DataGridViewHelper.SizeCompact(dgvTransaksiDetail, 100, 420);
 
             dgvTransacTiketDet.Rows.Clear();
             dgvTransaksiDetail.Rows.Clear();

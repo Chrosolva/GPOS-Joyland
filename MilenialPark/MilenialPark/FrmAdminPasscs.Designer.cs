@@ -51,6 +51,7 @@
             this.btnVerify.TabIndex = 30;
             this.btnVerify.Text = "VERIFY";
             this.btnVerify.UseVisualStyleBackColor = false;
+            this.btnVerify.Click += new System.EventHandler(this.btnVerify_Click);
             // 
             // label2
             // 
@@ -71,6 +72,7 @@
             this.txtpassword.PasswordChar = '*';
             this.txtpassword.Size = new System.Drawing.Size(263, 26);
             this.txtpassword.TabIndex = 28;
+            this.txtpassword.KeyDown += new System.Windows.Forms.KeyEventHandler(this.txtpassword_KeyDown);
             // 
             // label1
             // 
@@ -124,6 +126,7 @@
             this.Controls.Add(this.txtUserID);
             this.Name = "FrmAdminPass";
             this.Text = "FrmAdminPasscs";
+            this.Load += new System.EventHandler(this.FrmAdminPass_Load);
             this.ResumeLayout(false);
             this.PerformLayout();
 
