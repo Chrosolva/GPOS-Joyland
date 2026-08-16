@@ -253,7 +253,7 @@ namespace MilenialPark.Views.Reports
 
         private void cbxReportType_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(cbxReportType.Text.Contains("Penjualan"))
+            if(cbxReportType.Text.Contains("Penjualan"))    
             {
                 cbxPaymentType.Items.Clear();
                 cbxPaymentType.Items.Add("ALL");

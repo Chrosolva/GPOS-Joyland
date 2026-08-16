@@ -934,6 +934,11 @@ namespace MilenialPark.Views.Transaction
                 return;
             }
 
+            DataGridViewHelper.ApplyPOSStyle(dgvTransacTiketDet);
+            DataGridViewHelper.SizeCompact(dgvTransacTiketDet, 100, 420);
+            DataGridViewHelper.ApplyPOSStyle(dgvTransaksiDetail);
+            DataGridViewHelper.SizeCompact(dgvTransaksiDetail, 100, 420);
+
             dgvTransacTiketDet.Rows.Clear();
             dgvTransaksiDetail.Rows.Clear();
 

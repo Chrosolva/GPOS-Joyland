@@ -33,6 +33,7 @@
             this.TPNEOrders = new System.Windows.Forms.TabPage();
             this.TPTopUpCard = new System.Windows.Forms.TabPage();
             this.TPDaftarKartu = new System.Windows.Forms.TabPage();
+            this.TPRFID = new System.Windows.Forms.TabPage();
             this.TCMainOrder.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -42,6 +43,7 @@
             this.TCMainOrder.Controls.Add(this.TPNEOrders);
             this.TCMainOrder.Controls.Add(this.TPTopUpCard);
             this.TCMainOrder.Controls.Add(this.TPDaftarKartu);
+            this.TCMainOrder.Controls.Add(this.TPRFID);
             this.TCMainOrder.Dock = System.Windows.Forms.DockStyle.Fill;
             this.TCMainOrder.Font = new System.Drawing.Font("Segoe UI", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.TCMainOrder.ItemSize = new System.Drawing.Size(58, 35);
@@ -91,6 +93,15 @@
             this.TPDaftarKartu.Text = "Daftar Kartu";
             this.TPDaftarKartu.UseVisualStyleBackColor = true;
             // 
+            // TPRFID
+            // 
+            this.TPRFID.Location = new System.Drawing.Point(4, 39);
+            this.TPRFID.Name = "TPRFID";
+            this.TPRFID.Size = new System.Drawing.Size(1300, 589);
+            this.TPRFID.TabIndex = 4;
+            this.TPRFID.Text = "RFID";
+            this.TPRFID.UseVisualStyleBackColor = true;
+            // 
             // FrmMainOrder
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -111,5 +122,6 @@
         private System.Windows.Forms.TabPage TPTopUpCard;
         private System.Windows.Forms.TabPage TPDaftarKartu;
         public System.Windows.Forms.TabControl TCMainOrder;
+        private System.Windows.Forms.TabPage TPRFID;
     }
 }

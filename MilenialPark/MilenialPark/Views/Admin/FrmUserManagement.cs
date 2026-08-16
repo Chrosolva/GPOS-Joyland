@@ -47,6 +47,8 @@ namespace MilenialPark.Views.Admin
 
         private void FrmUserManagement_Load(object sender, EventArgs e)
         {
+            DataGridViewHelper.ApplyPOSStyle(dgvUserList);
+            DataGridViewHelper.SizeCompact(dgvUserList, 100, 420);
             parentfrm.btnFind.Click += this.UserSearch;
             parentfrm.txtSearch.TextChanged += this.UserSearch;
             parentfrm.cbxCategory.Items.Add("UserID");

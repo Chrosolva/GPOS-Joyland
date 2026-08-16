@@ -83,6 +83,11 @@ namespace MilenialPark.Views.Transaction
                 return;
             }
 
+            DataGridViewHelper.ApplyPOSStyle(dgvTransTiket);
+            DataGridViewHelper.ApplyPOSStyle(dgvTransTiketDetail);
+            DataGridViewHelper.SizeCompact(dgvTransTiket, 100, 420);
+            DataGridViewHelper.SizeCompact(dgvTransTiketDetail, 100, 420);
+
             dtpFrom.Value =
                 DateTime.Today;
 

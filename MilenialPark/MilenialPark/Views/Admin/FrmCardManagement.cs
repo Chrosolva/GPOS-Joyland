@@ -119,6 +119,8 @@ namespace MilenialPark.Views.Admin
         private void FrmCardManagement_Load(object sender, EventArgs e)
         {
             txtCardID.Focus();
+            DataGridViewHelper.ApplyPOSStyle(dgvCardList);
+            DataGridViewHelper.SizeCompact(dgvCardList, 100, 420);
             parentfrm.btnFind.Click += this.CardSearch;
             parentfrm.txtSearch.KeyUp += this.CardSearch;
             parentfrm.cbxCategory.Items.Add("CardID");

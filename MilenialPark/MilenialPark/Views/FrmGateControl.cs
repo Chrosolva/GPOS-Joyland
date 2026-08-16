@@ -66,7 +66,6 @@ namespace MilenialPark.Views
             SetupReminderGrid();
 
             DataGridViewHelper.ApplyPOSStyle(dgvReminder);
-
             DataGridViewHelper.ApplyPOSStyle(dgvGateLog);
 
             if (!_reminderGridSized)
