@@ -76,6 +76,8 @@ namespace MilenialPark.Views.Reports
                 }
             }
             cbxUserID.SelectedIndex = selected;
+
+
         }
 
         private void FrmReports_Load(object sender, EventArgs e)
@@ -85,6 +87,94 @@ namespace MilenialPark.Views.Reports
             dtpFrom.Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 0, 0, 0);
             dtpTo.Value = new DateTime(DateTime.Now.Year, DateTime.Now.Month, DateTime.Now.Day, 23, 59, 59);
             cbxReportType.SelectedIndex = 0;
+
+            SetupRoundingMode();
+            SetupAdjustmentAccess();
+        }
+
+        private void SetupAdjustmentAccess()
+        {
+            string tipeUser =
+                ClsStaticVariable.controllerUser.objUser.TipeUser ?? "";
+
+            bool isAdmin = tipeUser.Equals(
+                "Admin",
+                StringComparison.OrdinalIgnoreCase
+            );
+
+            if (isAdmin)
+            {
+                // Admin melihat actual/default normal report.
+                chkAdjustedReport.Checked = false;
+                chkAdjustedReport.Enabled = true;
+
+                nudAdjustmentPercentage.Enabled = false;
+                cbxRoundingMode.Enabled = false;
+            }
+            else
+            {
+                // Untuk internal management view.
+                chkAdjustedReport.Checked = true;
+                chkAdjustedReport.Enabled = false;
+
+                nudAdjustmentPercentage.Enabled = false;
+                cbxRoundingMode.Enabled = false;
+            }
+
+            UpdateAdjustmentControls();
+        }
+
+        private void SetupRoundingMode()
+        {
+            cbxRoundingMode.Items.Clear();
+
+            cbxRoundingMode.Items.Add("No Rounding");
+            cbxRoundingMode.Items.Add("Nearest");
+            cbxRoundingMode.Items.Add("Round Down");
+            cbxRoundingMode.Items.Add("Round Up");
+
+            cbxRoundingMode.SelectedIndex = 1;
+        }
+
+        private decimal ApplyRounding(
+    decimal value,
+    ReportRoundingMode roundingMode)
+        {
+            switch (roundingMode)
+            {
+                case ReportRoundingMode.Down:
+                    return Math.Floor(value);
+
+                case ReportRoundingMode.Up:
+                    return Math.Ceiling(value);
+
+                case ReportRoundingMode.Nearest:
+                    return Math.Round(
+                        value,
+                        0,
+                        MidpointRounding.AwayFromZero
+                    );
+
+                default:
+                    return value;
+            }
+        }
+
+        private decimal CalculateAdjustedValue(
+    decimal originalValue,
+    decimal percentage,
+    ReportRoundingMode roundingMode)
+        {
+            decimal multiplier =
+                1M - (percentage / 100M);
+
+            decimal result =
+                originalValue * multiplier;
+
+            return ApplyRounding(
+                result,
+                roundingMode
+            );
         }
 
 
@@ -274,6 +364,29 @@ namespace MilenialPark.Views.Reports
             }
 
             txtReportTitle.Text = cbxReportType.Text;
+        }
+
+        private void chkAdjustedReport_CheckedChanged(object sender, EventArgs e)
+        {
+            UpdateAdjustmentControls();
+        }
+
+        private void UpdateAdjustmentControls()
+        {
+            bool isAdmin =
+                ClsStaticVariable.controllerUser.objUser.TipeUser
+                .Equals(
+                    "Admin",
+                    StringComparison.OrdinalIgnoreCase
+                );
+
+            bool enabled = chkAdjustedReport.Checked;
+
+            nudAdjustmentPercentage.Enabled =
+                isAdmin && enabled;
+
+            cbxRoundingMode.Enabled =
+                isAdmin && enabled;
         }
     }
 }
