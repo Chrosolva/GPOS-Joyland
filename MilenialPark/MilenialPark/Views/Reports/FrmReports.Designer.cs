@@ -54,14 +54,25 @@
             this.crViewer = new CrystalDecisions.Windows.Forms.CrystalReportViewer();
             this.panel1 = new System.Windows.Forms.Panel();
             this.label13 = new System.Windows.Forms.Label();
+            this.lblAdjustment = new System.Windows.Forms.Label();
+            this.chkAdjustedReport = new System.Windows.Forms.CheckBox();
+            this.nudAdjustmentPercentage = new System.Windows.Forms.NumericUpDown();
+            this.lblRound = new System.Windows.Forms.Label();
+            this.cbxRoundingMode = new System.Windows.Forms.ComboBox();
             this.leftpanel.SuspendLayout();
             this.panellabel1.SuspendLayout();
             this.rightpanel.SuspendLayout();
             this.panel1.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudAdjustmentPercentage)).BeginInit();
             this.SuspendLayout();
             // 
             // leftpanel
             // 
+            this.leftpanel.Controls.Add(this.cbxRoundingMode);
+            this.leftpanel.Controls.Add(this.lblRound);
+            this.leftpanel.Controls.Add(this.nudAdjustmentPercentage);
+            this.leftpanel.Controls.Add(this.chkAdjustedReport);
+            this.leftpanel.Controls.Add(this.lblAdjustment);
             this.leftpanel.Controls.Add(this.label9);
             this.leftpanel.Controls.Add(this.txtReportTitle);
             this.leftpanel.Controls.Add(this.label6);
@@ -84,7 +95,7 @@
             this.leftpanel.Dock = System.Windows.Forms.DockStyle.Left;
             this.leftpanel.Location = new System.Drawing.Point(0, 0);
             this.leftpanel.Name = "leftpanel";
-            this.leftpanel.Size = new System.Drawing.Size(404, 716);
+            this.leftpanel.Size = new System.Drawing.Size(404, 731);
             this.leftpanel.TabIndex = 1;
             // 
             // label9
@@ -282,7 +293,7 @@
             this.btnSave.ForeColor = System.Drawing.Color.OrangeRed;
             this.btnSave.Image = ((System.Drawing.Image)(resources.GetObject("btnSave.Image")));
             this.btnSave.ImageAlign = System.Drawing.ContentAlignment.BottomLeft;
-            this.btnSave.Location = new System.Drawing.Point(145, 634);
+            this.btnSave.Location = new System.Drawing.Point(145, 665);
             this.btnSave.Name = "btnSave";
             this.btnSave.Padding = new System.Windows.Forms.Padding(7);
             this.btnSave.Size = new System.Drawing.Size(188, 54);
@@ -330,7 +341,7 @@
             this.rightpanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.rightpanel.Location = new System.Drawing.Point(404, 0);
             this.rightpanel.Name = "rightpanel";
-            this.rightpanel.Size = new System.Drawing.Size(822, 716);
+            this.rightpanel.Size = new System.Drawing.Size(822, 731);
             this.rightpanel.TabIndex = 2;
             // 
             // crViewer
@@ -341,7 +352,7 @@
             this.crViewer.Dock = System.Windows.Forms.DockStyle.Fill;
             this.crViewer.Location = new System.Drawing.Point(0, 51);
             this.crViewer.Name = "crViewer";
-            this.crViewer.Size = new System.Drawing.Size(822, 665);
+            this.crViewer.Size = new System.Drawing.Size(822, 680);
             this.crViewer.TabIndex = 0;
             // 
             // panel1
@@ -364,11 +375,67 @@
             this.label13.TabIndex = 35;
             this.label13.Text = "Report Viewer";
             // 
+            // lblAdjustment
+            // 
+            this.lblAdjustment.AutoSize = true;
+            this.lblAdjustment.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAdjustment.Location = new System.Drawing.Point(3, 587);
+            this.lblAdjustment.Name = "lblAdjustment";
+            this.lblAdjustment.Size = new System.Drawing.Size(33, 21);
+            this.lblAdjustment.TabIndex = 82;
+            this.lblAdjustment.Text = "Adj";
+            // 
+            // chkAdjustedReport
+            // 
+            this.chkAdjustedReport.AutoSize = true;
+            this.chkAdjustedReport.Location = new System.Drawing.Point(55, 592);
+            this.chkAdjustedReport.Name = "chkAdjustedReport";
+            this.chkAdjustedReport.Size = new System.Drawing.Size(15, 14);
+            this.chkAdjustedReport.TabIndex = 83;
+            this.chkAdjustedReport.UseVisualStyleBackColor = true;
+            this.chkAdjustedReport.CheckedChanged += new System.EventHandler(this.chkAdjustedReport_CheckedChanged);
+            // 
+            // nudAdjustmentPercentage
+            // 
+            this.nudAdjustmentPercentage.Location = new System.Drawing.Point(76, 586);
+            this.nudAdjustmentPercentage.Name = "nudAdjustmentPercentage";
+            this.nudAdjustmentPercentage.Size = new System.Drawing.Size(120, 20);
+            this.nudAdjustmentPercentage.TabIndex = 84;
+            // 
+            // lblRound
+            // 
+            this.lblRound.AutoSize = true;
+            this.lblRound.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblRound.Location = new System.Drawing.Point(3, 620);
+            this.lblRound.Name = "lblRound";
+            this.lblRound.Size = new System.Drawing.Size(56, 21);
+            this.lblRound.TabIndex = 85;
+            this.lblRound.Text = "Round";
+            // 
+            // cbxRoundingMode
+            // 
+            this.cbxRoundingMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbxRoundingMode.Font = new System.Drawing.Font("Segoe UI Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbxRoundingMode.FormattingEnabled = true;
+            this.cbxRoundingMode.Items.AddRange(new object[] {
+            "Laporan Detail Pendapatan",
+            "Laporan Pendapatan",
+            "Laporan Detail Penjualan",
+            "Laporan Penjualan ",
+            "Laporan Summary Pendapatan",
+            "Laporan Summary Penjualan",
+            "Laporan Summary Shift (80mm) Pendapatan",
+            "Laporan Summary Shift (80mm) Penjualan"});
+            this.cbxRoundingMode.Location = new System.Drawing.Point(76, 612);
+            this.cbxRoundingMode.Name = "cbxRoundingMode";
+            this.cbxRoundingMode.Size = new System.Drawing.Size(120, 29);
+            this.cbxRoundingMode.TabIndex = 86;
+            // 
             // FrmReports
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1226, 716);
+            this.ClientSize = new System.Drawing.Size(1226, 731);
             this.Controls.Add(this.rightpanel);
             this.Controls.Add(this.leftpanel);
             this.Name = "FrmReports";
@@ -381,6 +448,7 @@
             this.rightpanel.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudAdjustmentPercentage)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -412,5 +480,10 @@
         public System.Windows.Forms.Label label2;
         public System.Windows.Forms.Label label9;
         public System.Windows.Forms.TextBox txtReportTitle;
+        public System.Windows.Forms.ComboBox cbxRoundingMode;
+        public System.Windows.Forms.Label lblRound;
+        private System.Windows.Forms.NumericUpDown nudAdjustmentPercentage;
+        private System.Windows.Forms.CheckBox chkAdjustedReport;
+        public System.Windows.Forms.Label lblAdjustment;
     }
 }
