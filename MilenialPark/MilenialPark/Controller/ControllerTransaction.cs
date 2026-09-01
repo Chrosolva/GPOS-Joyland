@@ -1979,6 +1979,806 @@ namespace MilenialPark.Controller
                 .Filldatatable(query);
         }
 
+        public string VoidTicketTransaction(
+    string originalTransactionID,
+    string voidByUserID,
+    string approvedByUserID,
+    string voidReason)
+        {
+            if (string.IsNullOrWhiteSpace(originalTransactionID))
+                throw new Exception("Original Transaction ID tidak boleh kosong.");
+
+            if (string.IsNullOrWhiteSpace(voidByUserID))
+                throw new Exception("Void By User ID tidak boleh kosong.");
+
+            if (string.IsNullOrWhiteSpace(approvedByUserID))
+                throw new Exception("Approved By User ID tidak boleh kosong.");
+
+            if (string.IsNullOrWhiteSpace(voidReason))
+                throw new Exception("Void Reason tidak boleh kosong.");
+
+            SqlConnection conn =
+                ClsStaticVariable.objConnection.con;
+
+            SqlTransaction sqlTrans = null;
+
+            bool openedHere = false;
+
+            try
+            {
+                // ============================================
+                // 1. OPEN CONNECTION
+                // ============================================
+                if (conn.State != ConnectionState.Open)
+                {
+                    conn.Open();
+                    openedHere = true;
+                }
+
+                // Semua proses VOID harus satu transaction.
+                sqlTrans =
+                    conn.BeginTransaction(
+                        IsolationLevel.Serializable
+                    );
+
+
+                // ============================================
+                // 2. AMBIL & LOCK ORIGINAL TRANSACTION
+                // ============================================
+                string sqlOriginal =
+                    @"SELECT TOP 1
+                TransactionID,
+                TransactionDate,
+                TotalAmount,
+                PaymentType,
+                ISNULL(CardID, '') AS CardID,
+                ShopID,
+                ISNULL(Remarks, '') AS Remarks,
+                ISNULL(Subtotal, 0) AS Subtotal,
+                ISNULL(PPN, 0) AS PPN,
+                ISNULL(InitialBalance, 0) AS InitialBalance,
+                ISNULL(FinalBalance, 0) AS FinalBalance,
+                ISNULL(TransactionStatus, '') AS TransactionStatus,
+                ISNULL(TransactionType, '') AS TransactionType,
+                ISNULL(KodeCabang, '') AS KodeCabang,
+                ISNULL(UserID, '') AS UserID
+              FROM WHNPOS.dbo.Transaksi
+                   WITH (UPDLOCK, HOLDLOCK)
+              WHERE TransactionID = @TransactionID";
+
+
+                string paymentType = "";
+                string cardID = "";
+                string shopID = "";
+                string kodeCabang = "";
+                string originalStatus = "";
+                string originalType = "";
+
+                decimal totalAmount = 0;
+                decimal subtotal = 0;
+                decimal ppn = 0;
+                decimal initialBalance = 0;
+                decimal finalBalance = 0;
+
+
+                using (SqlCommand cmd =
+                       new SqlCommand(
+                           sqlOriginal,
+                           conn,
+                           sqlTrans))
+                {
+                    cmd.Parameters.Add(
+                        "@TransactionID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = originalTransactionID;
+
+                    using (SqlDataReader reader =
+                           cmd.ExecuteReader())
+                    {
+                        if (!reader.Read())
+                        {
+                            throw new Exception(
+                                "Transaksi original tidak ditemukan."
+                            );
+                        }
+
+                        totalAmount =
+                            Convert.ToDecimal(
+                                reader["TotalAmount"]
+                            );
+
+                        subtotal =
+                            Convert.ToDecimal(
+                                reader["Subtotal"]
+                            );
+
+                        ppn =
+                            Convert.ToDecimal(
+                                reader["PPN"]
+                            );
+
+                        initialBalance =
+                            Convert.ToDecimal(
+                                reader["InitialBalance"]
+                            );
+
+                        finalBalance =
+                            Convert.ToDecimal(
+                                reader["FinalBalance"]
+                            );
+
+                        paymentType =
+                            reader["PaymentType"]
+                                .ToString()
+                                .Trim();
+
+                        cardID =
+                            reader["CardID"]
+                                .ToString()
+                                .Trim();
+
+                        shopID =
+                            reader["ShopID"]
+                                .ToString()
+                                .Trim();
+
+                        kodeCabang =
+                            reader["KodeCabang"]
+                                .ToString()
+                                .Trim();
+
+                        originalStatus =
+                            reader["TransactionStatus"]
+                                .ToString()
+                                .Trim();
+
+                        originalType =
+                            reader["TransactionType"]
+                                .ToString()
+                                .Trim();
+                    }
+                }
+
+
+                // ============================================
+                // 3. VALIDASI TRANSAKSI
+                // ============================================
+
+                // Jangan VOID reversal transaction.
+                if (originalTransactionID.StartsWith(
+                        "TRV.",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new Exception(
+                        "Transaksi VOID tidak dapat di-VOID kembali."
+                    );
+                }
+
+                // Untuk FrmOrderTiket, kita batasi transaction ticket.
+                if (!originalTransactionID.StartsWith(
+                        "TRT.",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new Exception(
+                        "Hanya transaksi tiket TRT yang dapat di-VOID dari form ini."
+                    );
+                }
+
+                if (string.Equals(
+                        originalStatus,
+                        "VOID",
+                        StringComparison.OrdinalIgnoreCase))
+                {
+                    throw new Exception(
+                        "Transaksi ini sudah berstatus VOID."
+                    );
+                }
+
+
+                // ============================================
+                // 4. DOUBLE CHECK TransactionVoid
+                // ============================================
+                string sqlCheckVoid =
+                    @"SELECT COUNT(*)
+              FROM WHNPOS.dbo.TransactionVoid
+                   WITH (UPDLOCK, HOLDLOCK)
+              WHERE OriginalTransactionID =
+                    @OriginalTransactionID";
+
+
+                using (SqlCommand cmd =
+                       new SqlCommand(
+                           sqlCheckVoid,
+                           conn,
+                           sqlTrans))
+                {
+                    cmd.Parameters.Add(
+                        "@OriginalTransactionID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = originalTransactionID;
+
+                    int existingVoid =
+                        Convert.ToInt32(
+                            cmd.ExecuteScalar()
+                        );
+
+                    if (existingVoid > 0)
+                    {
+                        throw new Exception(
+                            "Transaksi ini sudah pernah di-VOID."
+                        );
+                    }
+                }
+
+
+                // ============================================
+                // 5. DOUBLE CHECK TICKET BELUM DIGUNAKAN
+                // ============================================
+                string sqlUsedTicket =
+                    @"SELECT COUNT(*)
+              FROM WHNPOS.dbo.TransaksiTiketDetail
+                   WITH (UPDLOCK, HOLDLOCK)
+              WHERE TransactionID =
+                    @OriginalTransactionID
+                AND OrderStatus IN
+                (
+                    'ENTER-IN',
+                    'ENTER-OUT',
+                    'LATE-TICKET',
+                    'OVERTIME'
+                )";
+
+
+                using (SqlCommand cmd =
+                       new SqlCommand(
+                           sqlUsedTicket,
+                           conn,
+                           sqlTrans))
+                {
+                    cmd.Parameters.Add(
+                        "@OriginalTransactionID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = originalTransactionID;
+
+                    int usedTicketCount =
+                        Convert.ToInt32(
+                            cmd.ExecuteScalar()
+                        );
+
+                    if (usedTicketCount > 0)
+                    {
+                        throw new Exception(
+                            "VOID gagal. Ticket pada transaksi " +
+                            "ini sudah pernah digunakan."
+                        );
+                    }
+                }
+
+
+                // ============================================
+                // 6. GENERATE REVERSAL TRANSACTION ID
+                //
+                // contoh:
+                // TRT.JOYLAND-26-000008
+                // menjadi:
+                // TRV.JOYLAND-26-000001
+                // ============================================
+
+                string year =
+                    DateTime.Now.Year
+                        .ToString()
+                        .Substring(2, 2);
+
+                string prefix =
+                    "TRV." +
+                    shopID +
+                    "-" +
+                    year +
+                    "-";
+
+
+                string sqlLastVoid =
+                    @"SELECT ISNULL(
+                  MAX(
+                      TRY_CONVERT(
+                          INT,
+                          RIGHT(TransactionID, 6)
+                      )
+                  ),
+                  0
+              )
+              FROM WHNPOS.dbo.Transaksi
+                   WITH (UPDLOCK, HOLDLOCK)
+              WHERE TransactionID LIKE @Prefix";
+
+
+                int lastNumber = 0;
+
+                using (SqlCommand cmd =
+                       new SqlCommand(
+                           sqlLastVoid,
+                           conn,
+                           sqlTrans))
+                {
+                    cmd.Parameters.Add(
+                        "@Prefix",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = prefix + "%";
+
+                    lastNumber =
+                        Convert.ToInt32(
+                            cmd.ExecuteScalar()
+                        );
+                }
+
+
+                string reversalTransactionID =
+                    prefix +
+                    (lastNumber + 1)
+                        .ToString("D6");
+
+
+                // ============================================
+                // 7. INSERT REVERSAL TRANSACTION
+                // ============================================
+                string sqlInsertReversal =
+                    @"INSERT INTO WHNPOS.dbo.Transaksi
+                      (
+                          TransactionID,
+                          TransactionDate,
+                          TotalAmount,
+                          PaymentType,
+                          CardID,
+                          ShopID,
+                          Remarks,
+                          Subtotal,
+                          PPN,
+                          InitialBalance,
+                          FinalBalance,
+                          TransactionStatus,
+                          TransactionType,
+                          KodeCabang,
+                          UserID
+                      )
+
+                      OUTPUT INSERTED.TransactionID
+
+                      VALUES
+                      (
+                          @TransactionID,
+                          GETDATE(),
+                          @TotalAmount,
+                          @PaymentType,
+                          @CardID,
+                          @ShopID,
+                          @Remarks,
+                          @Subtotal,
+                          @PPN,
+                          @InitialBalance,
+                          @FinalBalance,
+                          'VOID',
+                          'VOID',
+                          @KodeCabang,
+                          @UserID
+                      )";
+
+
+                using (SqlCommand cmd =
+                       new SqlCommand(
+                           sqlInsertReversal,
+                           conn,
+                           sqlTrans))
+                {
+                    cmd.Parameters.Add(
+                        "@TransactionID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = reversalTransactionID;
+
+                    // Reversal dicatat NEGATIF
+                    cmd.Parameters.Add(
+                        "@TotalAmount",
+                        SqlDbType.Decimal
+                    ).Value = -totalAmount;
+
+                    cmd.Parameters.Add(
+                        "@PaymentType",
+                        SqlDbType.VarChar,
+                        50
+                    ).Value = paymentType;
+
+                    cmd.Parameters.Add(
+                        "@CardID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = cardID;
+
+                    cmd.Parameters.Add(
+                        "@ShopID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = shopID;
+
+                    cmd.Parameters.Add(
+                        "@Remarks",
+                        SqlDbType.VarChar,
+                        500
+                    ).Value =
+                        "VOID OF " +
+                        originalTransactionID +
+                        " - " +
+                        voidReason;
+
+                    cmd.Parameters.Add(
+                        "@Subtotal",
+                        SqlDbType.Decimal
+                    ).Value = -subtotal;
+
+                    cmd.Parameters.Add(
+                        "@PPN",
+                        SqlDbType.Decimal
+                    ).Value = -ppn;
+
+
+                    /*
+                     * Untuk reversal:
+                     *
+                     * original:
+                     * InitialBalance -> FinalBalance
+                     *
+                     * reversal:
+                     * FinalBalance -> InitialBalance
+                     *
+                     * Kalau transaksi external payment seperti
+                     * MASTER_CARD 0 -> 0, hasilnya tetap 0.
+                     */
+                    cmd.Parameters.Add(
+                        "@InitialBalance",
+                        SqlDbType.Decimal
+                    ).Value = finalBalance;
+
+                    cmd.Parameters.Add(
+                        "@FinalBalance",
+                        SqlDbType.Decimal
+                    ).Value = initialBalance;
+
+                    cmd.Parameters.Add(
+                        "@KodeCabang",
+                        SqlDbType.VarChar,
+                        50
+                    ).Value = kodeCabang;
+
+                    // User yang REQUEST VOID,
+                    // approval tetap disimpan terpisah
+                    // di TransactionVoid.
+                    cmd.Parameters.Add(
+                        "@UserID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = voidByUserID;
+
+                    object insertedID =
+    cmd.ExecuteScalar();
+
+                    if (insertedID == null ||
+                        insertedID == DBNull.Value ||
+                        string.IsNullOrWhiteSpace(
+                            insertedID.ToString()))
+                    {
+                        throw new Exception(
+                            "Gagal membuat reversal transaction."
+                        );
+                    }
+
+                    if (!string.Equals(
+                            insertedID.ToString().Trim(),
+                            reversalTransactionID,
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new Exception(
+                            "Reversal TransactionID tidak sesuai."
+                        );
+                    }
+                }
+
+
+                // ============================================
+                // 8. INSERT TransactionVoid
+                // ============================================
+                string sqlInsertVoid =
+    @"INSERT INTO WHNPOS.dbo.TransactionVoid
+      (
+          OriginalTransactionID,
+          ReversalTransactionID,
+          VoidDate,
+          VoidByUserID,
+          ApprovedByUserID,
+          VoidReason,
+          OriginalAmount
+      )
+
+      OUTPUT INSERTED.VoidID
+
+      VALUES
+      (
+          @OriginalTransactionID,
+          @ReversalTransactionID,
+          GETDATE(),
+          @VoidByUserID,
+          @ApprovedByUserID,
+          @VoidReason,
+          @OriginalAmount
+      )";
+
+
+                using (SqlCommand cmd =
+                       new SqlCommand(
+                           sqlInsertVoid,
+                           conn,
+                           sqlTrans))
+                {
+                    cmd.Parameters.Add(
+                        "@OriginalTransactionID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = originalTransactionID;
+
+                    cmd.Parameters.Add(
+                        "@ReversalTransactionID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = reversalTransactionID;
+
+                    cmd.Parameters.Add(
+                        "@VoidByUserID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = voidByUserID;
+
+                    cmd.Parameters.Add(
+                        "@ApprovedByUserID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = approvedByUserID;
+
+                    cmd.Parameters.Add(
+                        "@VoidReason",
+                        SqlDbType.VarChar,
+                        500
+                    ).Value = voidReason;
+
+                    cmd.Parameters.Add(
+                        "@OriginalAmount",
+                        SqlDbType.Decimal
+                    ).Value = totalAmount;
+
+                    object insertedVoidID =
+    cmd.ExecuteScalar();
+
+                    if (insertedVoidID == null ||
+                        insertedVoidID == DBNull.Value)
+                    {
+                        throw new Exception(
+                            "Gagal mencatat TransactionVoid."
+                        );
+                    }
+                }
+
+
+                // ============================================
+                // 9. UPDATE ORIGINAL TRANSACTION
+                // ============================================
+                string sqlUpdateOriginal =
+     @"UPDATE WHNPOS.dbo.Transaksi
+      SET TransactionStatus = 'VOID'
+      WHERE TransactionID = @OriginalTransactionID;
+
+      SELECT TransactionStatus
+      FROM WHNPOS.dbo.Transaksi
+      WHERE TransactionID = @OriginalTransactionID;";
+
+                using (SqlCommand cmd =
+                       new SqlCommand(
+                           sqlUpdateOriginal,
+                           conn,
+                           sqlTrans))
+                {
+                    cmd.Parameters.Add(
+                        "@OriginalTransactionID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = originalTransactionID;
+
+                    object updatedStatus =
+                        cmd.ExecuteScalar();
+
+                    if (updatedStatus == null ||
+                        updatedStatus == DBNull.Value ||
+                        !string.Equals(
+                            updatedStatus.ToString().Trim(),
+                            "VOID",
+                            StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new Exception(
+                            "Gagal mengubah status transaksi original menjadi VOID."
+                        );
+                    }
+                }
+
+
+                // ============================================
+                // 10. UPDATE TICKET DETAIL
+                // ============================================
+                string sqlUpdateTicketDetail =
+    @"UPDATE WHNPOS.dbo.TransaksiTiketDetail
+      SET OrderStatus = 'VOID'
+      WHERE TransactionID = @OriginalTransactionID;
+
+      SELECT COUNT(*)
+      FROM WHNPOS.dbo.TransaksiTiketDetail
+      WHERE TransactionID = @OriginalTransactionID
+        AND ISNULL(OrderStatus, '') <> 'VOID';";
+
+                using (SqlCommand cmd =
+                       new SqlCommand(
+                           sqlUpdateTicketDetail,
+                           conn,
+                           sqlTrans))
+                {
+                    cmd.Parameters.Add(
+                        "@OriginalTransactionID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = originalTransactionID;
+
+                    int remainingNonVoid =
+                        Convert.ToInt32(
+                            cmd.ExecuteScalar()
+                        );
+
+                    if (remainingNonVoid > 0)
+                    {
+                        throw new Exception(
+                            "Gagal mengubah status ticket detail menjadi VOID."
+                        );
+                    }
+                }
+
+
+                // ============================================
+                // 11. UPDATE NORMAL ITEM DETAIL
+                // ============================================
+                string sqlUpdateDetail =
+    @"UPDATE WHNPOS.dbo.TransaksiDetail
+      SET OrderStatus = 'VOID'
+      WHERE TransactionID = @OriginalTransactionID;
+
+      SELECT COUNT(*)
+      FROM WHNPOS.dbo.TransaksiDetail
+      WHERE TransactionID = @OriginalTransactionID
+        AND ISNULL(OrderStatus, '') <> 'VOID';";
+
+                using (SqlCommand cmd =
+                       new SqlCommand(
+                           sqlUpdateDetail,
+                           conn,
+                           sqlTrans))
+                {
+                    cmd.Parameters.Add(
+                        "@OriginalTransactionID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = originalTransactionID;
+
+                    int remainingNonVoid =
+                        Convert.ToInt32(
+                            cmd.ExecuteScalar()
+                        );
+
+                    if (remainingNonVoid > 0)
+                    {
+                        throw new Exception(
+                            "Gagal mengubah status transaction detail menjadi VOID."
+                        );
+                    }
+                }
+
+
+                // ============================================
+                // 12. COMMIT
+                // ============================================
+                sqlTrans.Commit();
+
+                return reversalTransactionID;
+            }
+            catch
+            {
+                // ============================================
+                // ROLLBACK JIKA ADA SATU SAJA YANG GAGAL
+                // ============================================
+                try
+                {
+                    if (sqlTrans != null)
+                    {
+                        sqlTrans.Rollback();
+                    }
+                }
+                catch
+                {
+                    // Jangan menutupi exception original.
+                }
+
+                throw;
+            }
+            finally
+            {
+                if (openedHere &&
+                    conn.State == ConnectionState.Open)
+                {
+                    conn.Close();
+                }
+            }
+        }
+
+        public string GetOriginalTransactionIDFromVoid(
+    string reversalTransactionID)
+        {
+            string sql =
+                @"SELECT TOP 1 OriginalTransactionID
+          FROM WHNPOS.dbo.TransactionVoid
+          WHERE ReversalTransactionID =
+                @ReversalTransactionID";
+
+            SqlConnection conn =
+                ClsStaticVariable.objConnection.con;
+
+            bool openedHere = false;
+
+            try
+            {
+                if (conn.State != ConnectionState.Open)
+                {
+                    conn.Open();
+                    openedHere = true;
+                }
+
+                using (SqlCommand cmd =
+                       new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.Add(
+                        "@ReversalTransactionID",
+                        SqlDbType.VarChar,
+                        100
+                    ).Value = reversalTransactionID;
+
+                    object result =
+                        cmd.ExecuteScalar();
+
+                    if (result == null ||
+                        result == DBNull.Value)
+                    {
+                        return "";
+                    }
+
+                    return result
+                        .ToString()
+                        .Trim();
+                }
+            }
+            finally
+            {
+                if (openedHere &&
+                    conn.State == ConnectionState.Open)
+                {
+                    conn.Close();
+                }
+            }
+        }
+
         #endregion
     }
 }
