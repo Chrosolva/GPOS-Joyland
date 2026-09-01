@@ -111,6 +111,56 @@ namespace MilenialPark.Controller
                     TransactionID = "TRT." + ID + "-" + DateTime.Now.Year.ToString().Substring(2, 2) + "-" + 1.ToString("D6");
                 }
             }
+            else if (type == "VOID")
+            {
+                query =
+                    "SELECT TOP 1 TransactionID " +
+                    "FROM WHNPOS.dbo.Transaksi " +
+                    "WHERE TransactionID LIKE " +
+                    ClsFungsi.C2Q("TRV." + ID + "%") + " " +
+                    "ORDER BY TransactionID DESC";
+
+                dt = ClsStaticVariable.objConnection
+                    .objsqlconnection
+                    .Filldatatable(query);
+
+                if (dt.Rows.Count > 0)
+                {
+                    int tmp =
+                        Convert.ToInt32(
+                            dt.Rows[0]["TransactionID"]
+                                .ToString()
+                                .Substring(
+                                    dt.Rows[0]["TransactionID"]
+                                        .ToString()
+                                        .Length - 6,
+                                    6
+                                )
+                        );
+
+                    TransactionID =
+                        "TRV." +
+                        ID +
+                        "-" +
+                        DateTime.Now.Year
+                            .ToString()
+                            .Substring(2, 2) +
+                        "-" +
+                        (tmp + 1).ToString("D6");
+                }
+                else
+                {
+                    TransactionID =
+                        "TRV." +
+                        ID +
+                        "-" +
+                        DateTime.Now.Year
+                            .ToString()
+                            .Substring(2, 2) +
+                        "-" +
+                        1.ToString("D6");
+                }
+            }
         } 
 
         public DataTable getCard(string CardID)
@@ -1865,6 +1915,69 @@ namespace MilenialPark.Controller
 
 
         //}
+
+        public DataTable GetVoidPrecheck(
+    string transactionID)
+        {
+            query =
+                "SELECT " +
+                "    TR.TransactionID, " +
+                "    TR.TransactionStatus, " +
+                "    TR.PaymentType, " +
+                "    TR.CardID, " +
+                "    TR.ShopID, " +
+                "    TR.TotalAmount, " +
+                "    TR.Subtotal, " +
+                "    TR.PPN, " +
+                "    TR.InitialBalance, " +
+                "    TR.FinalBalance, " +
+
+                "    ISNULL(TV.VoidID, 0) " +
+                "        AS ExistingVoidID, " +
+
+                "    SUM(" +
+                "        CASE " +
+                "            WHEN TTD.OrderStatus IN " +
+                "            (" +
+                "                'ENTER-IN'," +
+                "                'ENTER-OUT'," +
+                "                'LATE-TICKET'," +
+                "                'OVERTIME'" +
+                "            ) " +
+                "            THEN 1 " +
+                "            ELSE 0 " +
+                "        END" +
+                "    ) AS UsedTicketCount " +
+
+                "FROM WHNPOS.dbo.Transaksi TR " +
+
+                "LEFT JOIN WHNPOS.dbo.TransaksiTiketDetail TTD " +
+                "    ON TR.TransactionID = TTD.TransactionID " +
+
+                "LEFT JOIN WHNPOS.dbo.TransactionVoid TV " +
+                "    ON TR.TransactionID = " +
+                "       TV.OriginalTransactionID " +
+
+                "WHERE TR.TransactionID = " +
+                ClsFungsi.C2Q(transactionID) + " " +
+
+                "GROUP BY " +
+                "    TR.TransactionID, " +
+                "    TR.TransactionStatus, " +
+                "    TR.PaymentType, " +
+                "    TR.CardID, " +
+                "    TR.ShopID, " +
+                "    TR.TotalAmount, " +
+                "    TR.Subtotal, " +
+                "    TR.PPN, " +
+                "    TR.InitialBalance, " +
+                "    TR.FinalBalance, " +
+                "    TV.VoidID";
+
+            return ClsStaticVariable.objConnection
+                .objsqlconnection
+                .Filldatatable(query);
+        }
 
         #endregion
     }

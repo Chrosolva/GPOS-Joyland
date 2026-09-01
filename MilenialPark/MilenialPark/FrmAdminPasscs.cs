@@ -1,13 +1,6 @@
 ﻿using MilenialPark.Controller;
 using MilenialPark.Master;
 using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace MilenialPark
@@ -16,12 +9,44 @@ namespace MilenialPark
     {
         public bool IsVerified { get; private set; } = false;
         public string VerifiedUserId { get; private set; } = "";
+
+        public string VoidReason
+        {
+            get
+            {
+                return (txtRemarks.Text ?? "").Trim();
+            }
+        }
+
+        private bool _isVoidMode = false;
+        private string _transactionID = "";
+
         public ControllerUser controllerUser = new ControllerUser();
 
-
+        // ==============================
+        // CONSTRUCTOR LAMA
+        // Dipakai Gate
+        // Jangan diubah behaviour-nya
+        // ==============================
         public FrmAdminPass()
         {
             InitializeComponent();
+
+            _isVoidMode = false;
+        }
+
+        // ==============================
+        // CONSTRUCTOR KHUSUS VOID
+        // ==============================
+        public FrmAdminPass(string transactionID)
+        {
+            InitializeComponent();
+
+            _isVoidMode = true;
+            _transactionID = transactionID;
+
+            this.Text = "VOID TRANSACTION - " + transactionID;
+            btnVerify.Text = "VERIFY & VOID";
         }
 
         private void FrmAdminPass_Load(object sender, EventArgs e)
@@ -34,24 +59,50 @@ namespace MilenialPark
         {
             string uid = (txtUserID.Text ?? "").Trim();
             string pwd = (txtpassword.Text ?? "").Trim();
+            string remarks = (txtRemarks.Text ?? "").Trim();
 
+            // ==============================
+            // VALIDASI USER/PASSWORD
+            // berlaku untuk Gate & Void
+            // ==============================
             if (uid == "" || pwd == "")
             {
-                MessageBox.Show("UserID/Password wajib diisi.");
+                MessageBox.Show(
+                    "UserID/Password wajib diisi.",
+                    "Validasi",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
+
                 return;
             }
 
-            // TODO: pakai fungsi login admin yang SUDAH ADA di project kamu
-            // Contoh:
+            // ==============================
+            // REMARKS HANYA WAJIB SAAT VOID
+            // ==============================
+            if (_isVoidMode && remarks == "")
+            {
+                MessageBox.Show(
+                    "Alasan VOID wajib diisi.",
+                    "Validasi",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Warning
+                );
 
+                txtRemarks.Focus();
+                return;
+            }
+
+            // ==============================
+            // VERIFIKASI ADMIN
+            // Logic lama tetap
+            // ==============================
             bool ok = false;
 
-            controllerUser.objUser = controllerUser.getOneUser(txtUserID.Text, txtpassword.Text);
-            if (controllerUser.objUser == null)
-            {
-                ok = false;
-            }
-            else
+            controllerUser.objUser =
+                controllerUser.getOneUser(uid, pwd);
+
+            if (controllerUser.objUser != null)
             {
                 if (controllerUser.objUser.TipeUser == "Admin")
                 {
@@ -59,30 +110,32 @@ namespace MilenialPark
                 }
             }
 
-            // MVP: kalau kamu sudah punya current user admin login, bisa pakai ini:
-            // ok = (ClsStaticVariable.controllerUser.objUser.TipeUser == "Admin" && uid == ClsStaticVariable.controllerUser.objUser.UserID);
-
             if (!ok)
             {
-                MessageBox.Show("Akses ditolak. User bukan admin / password salah.");
+                MessageBox.Show(
+                    "Akses ditolak. User bukan admin / password salah.",
+                    "Akses Ditolak",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
+
                 return;
             }
 
             IsVerified = true;
             VerifiedUserId = uid;
 
-            this.DialogResult = DialogResult.OK;
-            this.Close();
+            DialogResult = DialogResult.OK;
+            Close();
         }
 
         private void txtpassword_KeyDown(object sender, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.Enter)
             {
-                btnVerify_Click(null, null);
+                e.SuppressKeyPress = true;
+                btnVerify_Click(sender, e);
             }
         }
-
-        
     }
 }
