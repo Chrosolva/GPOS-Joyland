@@ -120,7 +120,6 @@ namespace MilenialPark.Views.Transaction
                 );
 
             btnEdit.Enabled = isAdmin;
-            btnDelete.Enabled = isAdmin;
         }
 
         public void btnFilter_Click(
@@ -450,23 +449,52 @@ namespace MilenialPark.Views.Transaction
             }
 
             string transactionID =
-                transactionValue.ToString().Trim();
+                transactionValue
+                    .ToString()
+                    .Trim();
 
             if (string.IsNullOrWhiteSpace(transactionID))
             {
                 return;
             }
 
+
+            // ============================================
+            // Kalau TRV, ambil detail dari transaksi original
+            // ============================================
+            string detailTransactionID =
+                transactionID;
+
+            if (transactionID.StartsWith(
+                    "TRV.",
+                    StringComparison.OrdinalIgnoreCase))
+            {
+                string originalTransactionID =
+                    controllerTrans
+                        .GetOriginalTransactionIDFromVoid(
+                            transactionID
+                        );
+
+                if (!string.IsNullOrWhiteSpace(
+                        originalTransactionID))
+                {
+                    detailTransactionID =
+                        originalTransactionID;
+                }
+            }
+
+
             dt2 =
                 controllerTrans.GetCombinedTransactionDetails(
-                    transactionID
+                    detailTransactionID
                 );
 
             bind2.DataSource = dt2;
             dgvTransTiketDetail.DataSource = bind2;
 
             lblDetailRow.Text =
-                "Detail Count : " + dt2.Rows.Count;
+                "Detail Count : " +
+                dt2.Rows.Count;
         }
 
         private void btnPreview_Click(object sender, EventArgs e)
@@ -546,6 +574,251 @@ namespace MilenialPark.Views.Transaction
             frmScan.ShowDialog();
         }
 
+        private void btnDelete_Click(object sender, EventArgs e)
+        {
+            // ============================================
+            // 1. Pastikan ada transaksi yang dipilih
+            // ============================================
+            if (dgvTransTiket.CurrentRow == null ||
+                dgvTransTiket.CurrentRow.IsNewRow)
+            {
+                ClsFungsi.Pesan(
+                    "Silakan pilih transaksi yang akan di-VOID.",
+                    "INFO"
+                );
 
+                return;
+            }
+
+            object transactionValue =
+                dgvTransTiket.CurrentRow
+                    .Cells["TransactionID"]
+                    .Value;
+
+            if (transactionValue == null ||
+                transactionValue == DBNull.Value)
+            {
+                ClsFungsi.Pesan(
+                    "Transaction ID tidak ditemukan.",
+                    "ERROR"
+                );
+
+                return;
+            }
+
+            string transactionID =
+                transactionValue
+                    .ToString()
+                    .Trim();
+
+            if (string.IsNullOrWhiteSpace(transactionID))
+            {
+                ClsFungsi.Pesan(
+                    "Transaction ID tidak valid.",
+                    "ERROR"
+                );
+
+                return;
+            }
+
+            if (transactionID.StartsWith(
+        "TRV.",
+        StringComparison.OrdinalIgnoreCase))
+            {
+                ClsFungsi.Pesan(
+                    "Transaksi VOID tidak dapat di-VOID kembali.",
+                    "INFO"
+                );
+
+                return;
+            }
+
+
+            // ============================================
+            // 2. PRECHECK TRANSACTION
+            // ============================================
+            DataTable dtVoid =
+                controllerTrans.GetVoidPrecheck(
+                    transactionID
+                );
+
+            if (dtVoid == null ||
+                dtVoid.Rows.Count == 0)
+            {
+                ClsFungsi.Pesan(
+                    "Transaksi tidak ditemukan.",
+                    "ERROR"
+                );
+
+                return;
+            }
+
+            DataRow row =
+                dtVoid.Rows[0];
+
+
+            // ============================================
+            // 3. Sudah pernah di-VOID?
+            // ============================================
+            int existingVoidID =
+                row["ExistingVoidID"] == DBNull.Value
+                    ? 0
+                    : Convert.ToInt32(
+                        row["ExistingVoidID"]
+                      );
+
+            if (existingVoidID > 0)
+            {
+                ClsFungsi.Pesan(
+                    "Transaksi ini sudah pernah di-VOID.",
+                    "INFO"
+                );
+
+                return;
+            }
+
+
+            // ============================================
+            // 4. Ticket sudah digunakan?
+            // ============================================
+            int usedTicketCount =
+                row["UsedTicketCount"] == DBNull.Value
+                    ? 0
+                    : Convert.ToInt32(
+                        row["UsedTicketCount"]
+                      );
+
+            if (usedTicketCount > 0)
+            {
+                ClsFungsi.Pesan(
+                    "VOID tidak dapat dilakukan karena " +
+                    "ticket pada transaksi ini sudah digunakan.",
+                    "INFO"
+                );
+
+                return;
+            }
+
+
+            // ============================================
+            // 5. Konfirmasi sebelum meminta Admin
+            // ============================================
+            DialogResult confirm =
+                MessageBox.Show(
+                    "Apakah Anda yakin ingin melakukan VOID?\n\n" +
+                    "Transaction ID : " + transactionID,
+                    "Konfirmasi VOID",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning
+                );
+
+            if (confirm != DialogResult.Yes)
+            {
+                return;
+            }
+
+
+            // ============================================
+            // 6. ADMIN AUTHORIZATION
+            // ============================================
+            using (FrmAdminPass frmAdmin =
+                   new FrmAdminPass(transactionID))
+            {
+                if (frmAdmin.ShowDialog()
+                    != DialogResult.OK)
+                {
+                    return;
+                }
+
+                if (!frmAdmin.IsVerified)
+                {
+                    return;
+                }
+
+                string adminUserID =
+                     frmAdmin.VerifiedUserId;
+
+                string voidReason =
+                    frmAdmin.VoidReason;
+
+
+                // ========================================
+                // 7. ACTUAL VOID DATABASE TRANSACTION
+                // ========================================
+                try
+                {
+                    string voidByUserID = "";
+
+                    if (ClsStaticVariable.controllerUser != null &&
+                        ClsStaticVariable.controllerUser.objUser != null)
+                    {
+                        voidByUserID =
+                            ClsStaticVariable
+                                .controllerUser
+                                .objUser
+                                .UserID;    
+                    }
+
+                    if (string.IsNullOrWhiteSpace(voidByUserID))
+                    {
+                        ClsFungsi.Pesan(
+                            "User yang sedang login tidak ditemukan.",
+                            "ERROR"
+                        );
+
+                        return;
+                    }
+
+
+                    string reversalTransactionID =
+                        controllerTrans.VoidTicketTransaction(
+                            transactionID,
+                            voidByUserID,
+                            adminUserID,
+                            voidReason
+                        );
+
+
+                    // ========================================
+                    // 8. SUCCESS
+                    // ========================================
+                    MessageBox.Show(
+                        "TRANSAKSI BERHASIL DI-VOID.\n\n" +
+                        "Original : " +
+                            transactionID + "\n" +
+                        "Reversal : " +
+                            reversalTransactionID + "\n" +
+                        "Void By  : " +
+                            voidByUserID + "\n" +
+                        "Approved : " +
+                            adminUserID + "\n" +
+                        "Reason   : " +
+                            voidReason,
+                        "VOID BERHASIL",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Information
+                    );
+
+
+                    // ========================================
+                    // 9. REFRESH GRID
+                    // ========================================
+                    btnFilter_Click(
+                        null,
+                        null
+                    );
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(
+                        "VOID TRANSACTION GAGAL.\n\n" +
+                        ex.Message,
+                        "VOID GAGAL",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error
+                    );
+                }
+            }
+        }
     }
 }
