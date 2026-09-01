@@ -51,8 +51,8 @@ namespace MilenialPark.Controller
         //DONE
         public DataSet LoadTenantDailyTransactionPerShopID(string ShopID, DateTime StartDate, DateTime EndDate)
         {
-            query = $"  Select * from WHNPOS.dbo.DailyDetailTransaction ( {ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))} , " + 
-                    $" {ClsFungsi.C2QTime(Convert.ToDateTime(EndDate.ToString("dd/M/yyyy HH:mm:ss tt")))}, {ClsFungsi.C2Q(ShopID)}) " + 
+            query = $"  Select * from WHNPOS.dbo.DailyDetailTransaction ( {ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))} , " +
+                    $" {ClsFungsi.C2QTime(Convert.ToDateTime(EndDate.ToString("dd/M/yyyy HH:mm:ss tt")))}, {ClsFungsi.C2Q(ShopID)}) " +
                     " Order By TransactionID desc, TransactionDate, NoUrut ";
             DataSet ds = new DataSet();
             DataTable TblDailyTenantPerShopID = new DataTable();
@@ -98,7 +98,7 @@ namespace MilenialPark.Controller
         //DONE
         public DataSet LoadAllDailyTransactionTenant(DateTime StartDate, DateTime EndDate)
         {
-            query = $" Select * from WHNPOS.dbo.GetALLTenantDailyTransaction({ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))}, " + 
+            query = $" Select * from WHNPOS.dbo.GetALLTenantDailyTransaction({ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))}, " +
                     $" {ClsFungsi.C2QTime(Convert.ToDateTime(EndDate.ToString("dd/M/yyyy HH:mm:ss tt")))} ) where TransactionID like 'TRD%'  Order By TransactionID desc, TransactionDate, NoUrut ";
             DataSet ds = new DataSet();
             DataTable TblDailyTenantPerShopID = new DataTable();
@@ -111,8 +111,8 @@ namespace MilenialPark.Controller
         // DONE
         public DataSet LoadAllMonthlyTransactionTenant(DateTime StartDate, DateTime EndDate)
         {
-            query = $" Select Bulan, ShopID, ShopName, SUM(Qty) as ItemTerjual, Sum(SubTotal + PPNValue) as TotalPenjualan " + 
-                    $" from WHNPOS.dbo.GetTenantMonthlyTransactionALL('TRD%', {ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))} , " + 
+            query = $" Select Bulan, ShopID, ShopName, SUM(Qty) as ItemTerjual, Sum(SubTotal + PPNValue) as TotalPenjualan " +
+                    $" from WHNPOS.dbo.GetTenantMonthlyTransactionALL('TRD%', {ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))} , " +
                     $" {ClsFungsi.C2QTime(Convert.ToDateTime(EndDate.ToString("dd/M/yyyy HH:mm:ss tt")))}) Group By Bulan, ShopID, ShopName ";
             DataSet ds = new DataSet();
             DataTable TblGetMonthlyTenantTransactionALL = new DataTable();
@@ -144,7 +144,7 @@ namespace MilenialPark.Controller
         //DONE
         public DataSet LoadTenantMonthLyTransactionPerShopID(string ShopID, DateTime StartDate, DateTime EndDate)
         {
-            query = $" Select Bulan, ShopID, ShopName, PPN, ItemName, Price, Sum(Qty) as Qty from WHNPOS.dbo.GetTenantMonthlyTransaction( {ClsFungsi.C2Q(ShopID)} , {ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))} , " + 
+            query = $" Select Bulan, ShopID, ShopName, PPN, ItemName, Price, Sum(Qty) as Qty from WHNPOS.dbo.GetTenantMonthlyTransaction( {ClsFungsi.C2Q(ShopID)} , {ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))} , " +
                     $" {ClsFungsi.C2QTime(Convert.ToDateTime(EndDate.ToString("dd/M/yyyy HH:mm:ss tt")))} ) Group By ItemName, Bulan, ShopID, ShopName, PPN, Price Order By ItemName";
             DataSet ds = new DataSet();
             DataTable TblGetTenantMonthlyTransaction = new DataTable();
@@ -169,7 +169,7 @@ namespace MilenialPark.Controller
         //DONE
         public DataSet LoadYearlyTransactionPerTenant(string ShopID, DateTime StartDate, DateTime EndDate)
         {
-            query = $"Select * from WHNPOS.dbo.GetTenantsYearlyTransaction('TRD%', {ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))}, " + 
+            query = $"Select * from WHNPOS.dbo.GetTenantsYearlyTransaction('TRD%', {ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))}, " +
                     $" {ClsFungsi.C2QTime(Convert.ToDateTime(EndDate.ToString("dd/M/yyyy HH:mm:ss tt")))}) where ShopID = {ClsFungsi.C2Q(ShopID)} ";
             DataSet ds = new DataSet();
             DataTable TblGetTenantsYearlyTransaction = new DataTable();
@@ -244,11 +244,11 @@ namespace MilenialPark.Controller
             //query = $" Select * from WHNPOS.dbo.{functionname}({ClsFungsi.C2Q(TransactionID)},{ClsFungsi.C2Q(ShopID)},{ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))}, " +
             //        $" {ClsFungsi.C2QTime(Convert.ToDateTime(EndDate.ToString("dd/M/yyyy HH:mm:ss tt")))} )   Order By TransactionID desc, TransactionDate, NoUrut ";
 
-            query = "Select TransactionID, TransactionDate, TotalAmount, PaymentType, CardID, CustomerName, ShopID, Remarks, Subtotal, " + 
-                    " PPN, InitialBalance, FinalBalance, ItemID, ItemName, Price, Sum(Qty) as Qty " + 
-                    $" from {functionname}({ClsFungsi.C2Q(TransactionID)}, {ClsFungsi.C2Q(ShopID)},{ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))}" + 
-                    $" , {ClsFungsi.C2QTime(Convert.ToDateTime(EndDate.ToString("dd/M/yyyy HH:mm:ss tt")))}) " + 
-                    " group by TransactionID, TransactionDate, TotalAmount, PaymentType, CardID, CustomerName, ShopID, Remarks, Subtotal, " + 
+            query = "Select TransactionID, TransactionDate, TotalAmount, PaymentType, CardID, CustomerName, ShopID, Remarks, Subtotal, " +
+                    " PPN, InitialBalance, FinalBalance, ItemID, ItemName, Price, Sum(Qty) as Qty " +
+                    $" from {functionname}({ClsFungsi.C2Q(TransactionID)}, {ClsFungsi.C2Q(ShopID)},{ClsFungsi.C2QTime(Convert.ToDateTime(StartDate.ToString("dd/M/yyyy HH:mm:ss tt")))}" +
+                    $" , {ClsFungsi.C2QTime(Convert.ToDateTime(EndDate.ToString("dd/M/yyyy HH:mm:ss tt")))}) " +
+                    " group by TransactionID, TransactionDate, TotalAmount, PaymentType, CardID, CustomerName, ShopID, Remarks, Subtotal, " +
                     " PPN, InitialBalance, FinalBalance,ItemID, ItemName, Price ";
             DataSet ds = new DataSet();
             DataTable TblGetTransaction = new DataTable();
@@ -367,43 +367,78 @@ namespace MilenialPark.Controller
             return ds;
         }
 
-        public DataSet LoadPenjualan( DateTime start, DateTime End, string TransactionType, string PaymentType, string UserID, string Remarks)
+        public DataSet LoadPenjualan(
+    DateTime start,
+    DateTime end,
+    string transactionType,
+    string paymentType,
+    string userID,
+    string remarks)
         {
-            query = $" Select * from GetUnionTransaction()" + 
-                    $" where TransactionDate >= {ClsFungsi.C2QTime(start)} and TransactionDate <= {ClsFungsi.C2QTime(End)} " +
-                    $" and TransactionType not like 'TOP-UP'" +
-                    $" and TransactionType like {ClsFungsi.C2Q(TransactionType)} " + 
-                    $" and PaymentType like {ClsFungsi.C2Q(PaymentType)} " + 
-                    $" and UserID like {ClsFungsi.C2Q(UserID)} " + 
-                    $" and Remarks like {ClsFungsi.C2Q(Remarks)}";
-            DataSet ds = new DataSet();
-            DataTable TblUnionTransact = new DataTable();
-            TblUnionTransact = ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(query);
-            TblUnionTransact.TableName = "GetUnionTransaction";
-            ds.Tables.Add(TblUnionTransact);
-            return ds;
+            query =
+                "SELECT * " +
+                "FROM WHNPOS.dbo.GetUnionTransaction() " +
+                $"WHERE TransactionDate >= {ClsFungsi.C2QTime(start)} " +
+                $"AND TransactionDate <= {ClsFungsi.C2QTime(end)} " +
+
+                "AND ISNULL(TransactionType, '') <> 'TOP-UP' " +
+
+                $"AND ISNULL(TransactionType, '') LIKE {ClsFungsi.C2Q(transactionType)} " +
+                $"AND ISNULL(PaymentType, '') LIKE {ClsFungsi.C2Q(paymentType)} " +
+                $"AND ISNULL(UserID, '') LIKE {ClsFungsi.C2Q(userID)} " +
+                $"AND ISNULL(Remarks, '') LIKE {ClsFungsi.C2Q(remarks)}";
+
+            DataTable table =
+                ClsStaticVariable.objConnection
+                    .objsqlconnection
+                    .Filldatatable(query);
+
+            table.TableName = "GetUnionTransaction";
+
+            DataSet result = new DataSet();
+            result.Tables.Add(table);
+
+            return result;
         }
 
-        public DataSet LoadPendapatan(DateTime start, DateTime End, string TransactionType, string PaymentType, string UserID, string Remarks)
+        public DataSet LoadPendapatan(
+    DateTime start,
+    DateTime end,
+    string transactionType,
+    string paymentType,
+    string userID,
+    string remarks)
         {
-            query = $" Select * from GetUnionTransaction()" +
-                    $" where TransactionDate >= {ClsFungsi.C2QTime(start)} and TransactionDate <= {ClsFungsi.C2QTime(End)} " +
-                    $" and TransactionType like {ClsFungsi.C2Q(TransactionType)} " +
-                    $" and PaymentType not like 'CARD'" +
-                    $" and PaymentType like {ClsFungsi.C2Q(PaymentType)} " +
-                    $" and UserID like {ClsFungsi.C2Q(UserID)} " +
-                    $" and Remarks like {ClsFungsi.C2Q(Remarks)}";
-            DataSet ds = new DataSet();
-            DataTable TblUnionTransact = new DataTable();
-            TblUnionTransact = ClsStaticVariable.objConnection.objsqlconnection.Filldatatable(query);
-            TblUnionTransact.TableName = "GetUnionTransaction";
-            ds.Tables.Add(TblUnionTransact);
-            return ds;
+            query =
+                "SELECT * " +
+                "FROM WHNPOS.dbo.GetUnionTransaction() " +
+                $"WHERE TransactionDate >= {ClsFungsi.C2QTime(start)} " +
+                $"AND TransactionDate <= {ClsFungsi.C2QTime(end)} " +
+
+                $"AND ISNULL(TransactionType, '') LIKE {ClsFungsi.C2Q(transactionType)} " +
+
+                "AND ISNULL(PaymentType, '') <> 'CARD' " +
+
+                $"AND ISNULL(PaymentType, '') LIKE {ClsFungsi.C2Q(paymentType)} " +
+                $"AND ISNULL(UserID, '') LIKE {ClsFungsi.C2Q(userID)} " +
+                $"AND ISNULL(Remarks, '') LIKE {ClsFungsi.C2Q(remarks)}";
+
+            DataTable table =
+                ClsStaticVariable.objConnection
+                    .objsqlconnection
+                    .Filldatatable(query);
+
+            table.TableName = "GetUnionTransaction";
+
+            DataSet result = new DataSet();
+            result.Tables.Add(table);
+
+            return result;
         }
 
         public DataSet LoadPendapatanGroup(DateTime start, DateTime End, string TransactionType, string PaymentType, string UserID, string Remarks)
         {
-            query = $" Select TransactionID, PaymentType, CardID, UserID, CustomerName , TransactionType , ItemName, Price, Sum(Qty) as Jumlah , sum(Price * Qty) as Subtotal, Remarks " + 
+            query = $" Select TransactionID, PaymentType, CardID, UserID, CustomerName , TransactionType , ItemName, Price, Sum(Qty) as Jumlah , sum(Price * Qty) as Subtotal, Remarks " +
                     " from GetUnionTransaction()" +
                     $" where TransactionDate >= {ClsFungsi.C2QTime(start)} and TransactionDate <= {ClsFungsi.C2QTime(End)} " +
                     $" and TransactionType like {ClsFungsi.C2Q(TransactionType)} " +
@@ -441,9 +476,9 @@ namespace MilenialPark.Controller
 
         public DataSet LoadPenjualanSummary(DateTime start, DateTime End, string TransactionType, string PaymentType, string UserID, string Remarks)
         {
-            query = $"Select sub1.TransactionType, sub1.PaymentType , sub1.UserID, sub1.ItemName, sub1.Price, sum(sub1.Jumlah) as Jumlah, " + 
-                    " sum(subtotal) as subtotal " + 
-                    " from( " + 
+            query = $"Select sub1.TransactionType, sub1.PaymentType , sub1.UserID, sub1.ItemName, sub1.Price, sum(sub1.Jumlah) as Jumlah, " +
+                    " sum(subtotal) as subtotal " +
+                    " from( " +
                     " Select TransactionID, PaymentType, CardID, UserID, CustomerName , TransactionType , ItemName, Price, Sum(Qty) as Jumlah , sum(Price * Qty) as Subtotal, Remarks " +
                     " from GetUnionTransaction()" +
                     $" where TransactionDate >= {ClsFungsi.C2QTime(start)} and TransactionDate <= {ClsFungsi.C2QTime(End)} " +
@@ -484,6 +519,155 @@ namespace MilenialPark.Controller
             ds.Tables.Add(TblUnionTransact);
             return ds;
         }
+
+        public void ApplyReportAdjustment(
+    DataSet dataSet,
+    ReportAdjustmentOptions options)
+        {
+            if (dataSet == null ||
+                options == null ||
+                !options.Enabled ||
+                options.Percentage <= 0M)
+            {
+                return;
+            }
+
+            if (options.Percentage > 100M)
+            {
+                throw new ArgumentOutOfRangeException(
+                    "Percentage",
+                    "Adjustment percentage cannot exceed 100%."
+                );
+            }
+
+            foreach (DataTable table in dataSet.Tables)
+            {
+                ApplyAdjustmentToTable(
+                    table,
+                    options
+                );
+            }
+        }
+
+        private void ApplyAdjustmentToTable(
+    DataTable table,
+    ReportAdjustmentOptions options)
+        {
+            if (table == null)
+                return;
+
+            // Simpan nilai asli agar tetap dapat ditelusuri
+            // di DataSet walaupun Crystal menampilkan adjusted value.
+            EnsureOriginalColumn(
+                table,
+                "Price",
+                "ActualPrice"
+            );
+
+            EnsureOriginalColumn(
+                table,
+                "Subtotal",
+                "ActualSubtotal"
+            );
+
+            AdjustColumn(
+                table,
+                "Price",
+                options
+            );
+
+            AdjustColumn(
+                table,
+                "Subtotal",
+                options
+            );
+        }
+
+        private void EnsureOriginalColumn(
+    DataTable table,
+    string sourceColumn,
+    string originalColumn)
+        {
+            if (!table.Columns.Contains(sourceColumn))
+                return;
+
+            if (!table.Columns.Contains(originalColumn))
+            {
+                table.Columns.Add(
+                    originalColumn,
+                    typeof(decimal)
+                );
+            }
+
+            foreach (DataRow row in table.Rows)
+            {
+                if (row[sourceColumn] == DBNull.Value)
+                    continue;
+
+                row[originalColumn] =
+                    Convert.ToDecimal(
+                        row[sourceColumn]
+                    );
+            }
+        }
+
+        private void AdjustColumn(
+    DataTable table,
+    string columnName,
+    ReportAdjustmentOptions options)
+        {
+            if (!table.Columns.Contains(columnName))
+                return;
+
+            decimal multiplier =
+                1M - (options.Percentage / 100M);
+
+            foreach (DataRow row in table.Rows)
+            {
+                if (row[columnName] == DBNull.Value)
+                    continue;
+
+                decimal originalValue =
+                    Convert.ToDecimal(
+                        row[columnName]
+                    );
+
+                decimal adjustedValue =
+                    originalValue * multiplier;
+
+                row[columnName] =
+                    RoundValue(
+                        adjustedValue,
+                        options.RoundingMode
+                    );
+            }
+        }
+
+        private decimal RoundValue(
+    decimal value,
+    ReportRoundingMode roundingMode)
+        {
+            switch (roundingMode)
+            {
+                case ReportRoundingMode.Down:
+                    return Math.Floor(value);
+
+                case ReportRoundingMode.Up:
+                    return Math.Ceiling(value);
+
+                case ReportRoundingMode.Nearest:
+                    return Math.Round(
+                        value,
+                        0,
+                        MidpointRounding.AwayFromZero
+                    );
+
+                case ReportRoundingMode.None:
+                default:
+                    return value;
+            }
+        }
+
 
         #endregion
     }

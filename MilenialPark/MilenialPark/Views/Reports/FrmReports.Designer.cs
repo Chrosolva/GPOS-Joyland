@@ -30,6 +30,11 @@
         {
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(FrmReports));
             this.leftpanel = new System.Windows.Forms.Panel();
+            this.cbxRoundingMode = new System.Windows.Forms.ComboBox();
+            this.lblRound = new System.Windows.Forms.Label();
+            this.nudAdjustmentPercentage = new System.Windows.Forms.NumericUpDown();
+            this.chkAdjustedReport = new System.Windows.Forms.CheckBox();
+            this.lblAdjustment = new System.Windows.Forms.Label();
             this.label9 = new System.Windows.Forms.Label();
             this.txtReportTitle = new System.Windows.Forms.TextBox();
             this.label6 = new System.Windows.Forms.Label();
@@ -54,16 +59,11 @@
             this.crViewer = new CrystalDecisions.Windows.Forms.CrystalReportViewer();
             this.panel1 = new System.Windows.Forms.Panel();
             this.label13 = new System.Windows.Forms.Label();
-            this.lblAdjustment = new System.Windows.Forms.Label();
-            this.chkAdjustedReport = new System.Windows.Forms.CheckBox();
-            this.nudAdjustmentPercentage = new System.Windows.Forms.NumericUpDown();
-            this.lblRound = new System.Windows.Forms.Label();
-            this.cbxRoundingMode = new System.Windows.Forms.ComboBox();
             this.leftpanel.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudAdjustmentPercentage)).BeginInit();
             this.panellabel1.SuspendLayout();
             this.rightpanel.SuspendLayout();
             this.panel1.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudAdjustmentPercentage)).BeginInit();
             this.SuspendLayout();
             // 
             // leftpanel
@@ -97,6 +97,65 @@
             this.leftpanel.Name = "leftpanel";
             this.leftpanel.Size = new System.Drawing.Size(404, 731);
             this.leftpanel.TabIndex = 1;
+            // 
+            // cbxRoundingMode
+            // 
+            this.cbxRoundingMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbxRoundingMode.Font = new System.Drawing.Font("Segoe UI Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.cbxRoundingMode.FormattingEnabled = true;
+            this.cbxRoundingMode.Location = new System.Drawing.Point(76, 612);
+            this.cbxRoundingMode.Name = "cbxRoundingMode";
+            this.cbxRoundingMode.Size = new System.Drawing.Size(120, 29);
+            this.cbxRoundingMode.TabIndex = 86;
+            // 
+            // lblRound
+            // 
+            this.lblRound.AutoSize = true;
+            this.lblRound.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblRound.Location = new System.Drawing.Point(3, 620);
+            this.lblRound.Name = "lblRound";
+            this.lblRound.Size = new System.Drawing.Size(56, 21);
+            this.lblRound.TabIndex = 85;
+            this.lblRound.Text = "Round";
+            // 
+            // nudAdjustmentPercentage
+            // 
+            this.nudAdjustmentPercentage.DecimalPlaces = 2;
+            this.nudAdjustmentPercentage.Increment = new decimal(new int[] {
+            5,
+            0,
+            0,
+            65536});
+            this.nudAdjustmentPercentage.Location = new System.Drawing.Point(76, 586);
+            this.nudAdjustmentPercentage.Name = "nudAdjustmentPercentage";
+            this.nudAdjustmentPercentage.Size = new System.Drawing.Size(120, 20);
+            this.nudAdjustmentPercentage.TabIndex = 84;
+            this.nudAdjustmentPercentage.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            this.nudAdjustmentPercentage.Value = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            // 
+            // chkAdjustedReport
+            // 
+            this.chkAdjustedReport.AutoSize = true;
+            this.chkAdjustedReport.Location = new System.Drawing.Point(55, 592);
+            this.chkAdjustedReport.Name = "chkAdjustedReport";
+            this.chkAdjustedReport.Size = new System.Drawing.Size(15, 14);
+            this.chkAdjustedReport.TabIndex = 83;
+            this.chkAdjustedReport.UseVisualStyleBackColor = true;
+            this.chkAdjustedReport.CheckedChanged += new System.EventHandler(this.chkAdjustedReport_CheckedChanged);
+            // 
+            // lblAdjustment
+            // 
+            this.lblAdjustment.AutoSize = true;
+            this.lblAdjustment.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.lblAdjustment.Location = new System.Drawing.Point(3, 587);
+            this.lblAdjustment.Name = "lblAdjustment";
+            this.lblAdjustment.Size = new System.Drawing.Size(33, 21);
+            this.lblAdjustment.TabIndex = 82;
+            this.lblAdjustment.Text = "Adj";
             // 
             // label9
             // 
@@ -225,6 +284,7 @@
             this.dtpTo.Name = "dtpTo";
             this.dtpTo.Size = new System.Drawing.Size(185, 25);
             this.dtpTo.TabIndex = 71;
+            this.dtpTo.ValueChanged += new System.EventHandler(this.dtpTo_ValueChanged);
             // 
             // dtpFrom
             // 
@@ -235,6 +295,7 @@
             this.dtpFrom.Name = "dtpFrom";
             this.dtpFrom.Size = new System.Drawing.Size(185, 25);
             this.dtpFrom.TabIndex = 70;
+            this.dtpFrom.ValueChanged += new System.EventHandler(this.dtpFrom_ValueChanged);
             // 
             // label8
             // 
@@ -375,62 +436,6 @@
             this.label13.TabIndex = 35;
             this.label13.Text = "Report Viewer";
             // 
-            // lblAdjustment
-            // 
-            this.lblAdjustment.AutoSize = true;
-            this.lblAdjustment.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblAdjustment.Location = new System.Drawing.Point(3, 587);
-            this.lblAdjustment.Name = "lblAdjustment";
-            this.lblAdjustment.Size = new System.Drawing.Size(33, 21);
-            this.lblAdjustment.TabIndex = 82;
-            this.lblAdjustment.Text = "Adj";
-            // 
-            // chkAdjustedReport
-            // 
-            this.chkAdjustedReport.AutoSize = true;
-            this.chkAdjustedReport.Location = new System.Drawing.Point(55, 592);
-            this.chkAdjustedReport.Name = "chkAdjustedReport";
-            this.chkAdjustedReport.Size = new System.Drawing.Size(15, 14);
-            this.chkAdjustedReport.TabIndex = 83;
-            this.chkAdjustedReport.UseVisualStyleBackColor = true;
-            this.chkAdjustedReport.CheckedChanged += new System.EventHandler(this.chkAdjustedReport_CheckedChanged);
-            // 
-            // nudAdjustmentPercentage
-            // 
-            this.nudAdjustmentPercentage.Location = new System.Drawing.Point(76, 586);
-            this.nudAdjustmentPercentage.Name = "nudAdjustmentPercentage";
-            this.nudAdjustmentPercentage.Size = new System.Drawing.Size(120, 20);
-            this.nudAdjustmentPercentage.TabIndex = 84;
-            // 
-            // lblRound
-            // 
-            this.lblRound.AutoSize = true;
-            this.lblRound.Font = new System.Drawing.Font("Segoe UI", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.lblRound.Location = new System.Drawing.Point(3, 620);
-            this.lblRound.Name = "lblRound";
-            this.lblRound.Size = new System.Drawing.Size(56, 21);
-            this.lblRound.TabIndex = 85;
-            this.lblRound.Text = "Round";
-            // 
-            // cbxRoundingMode
-            // 
-            this.cbxRoundingMode.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cbxRoundingMode.Font = new System.Drawing.Font("Segoe UI Light", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.cbxRoundingMode.FormattingEnabled = true;
-            this.cbxRoundingMode.Items.AddRange(new object[] {
-            "Laporan Detail Pendapatan",
-            "Laporan Pendapatan",
-            "Laporan Detail Penjualan",
-            "Laporan Penjualan ",
-            "Laporan Summary Pendapatan",
-            "Laporan Summary Penjualan",
-            "Laporan Summary Shift (80mm) Pendapatan",
-            "Laporan Summary Shift (80mm) Penjualan"});
-            this.cbxRoundingMode.Location = new System.Drawing.Point(76, 612);
-            this.cbxRoundingMode.Name = "cbxRoundingMode";
-            this.cbxRoundingMode.Size = new System.Drawing.Size(120, 29);
-            this.cbxRoundingMode.TabIndex = 86;
-            // 
             // FrmReports
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -443,12 +448,12 @@
             this.Load += new System.EventHandler(this.FrmReports_Load);
             this.leftpanel.ResumeLayout(false);
             this.leftpanel.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.nudAdjustmentPercentage)).EndInit();
             this.panellabel1.ResumeLayout(false);
             this.panellabel1.PerformLayout();
             this.rightpanel.ResumeLayout(false);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
-            ((System.ComponentModel.ISupportInitialize)(this.nudAdjustmentPercentage)).EndInit();
             this.ResumeLayout(false);
 
         }

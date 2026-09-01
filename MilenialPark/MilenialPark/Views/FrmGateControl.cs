@@ -826,14 +826,14 @@ namespace MilenialPark.Views
             payload = "";
             gateCode = 0;
 
-            //if (!raw.Contains("(") || !raw.Contains(")") || !raw.Contains(",")) return false;
-            if (!raw.Contains("[") || !raw.Contains("]") || !raw.Contains(",")) return false;
+            if (!raw.Contains("(") || !raw.Contains(")") || !raw.Contains(",")) return false;
+            //if (!raw.Contains("[") || !raw.Contains("]") || !raw.Contains(",")) return false;
 
             // ambil isi dalam ()
-            //int i1 = raw.IndexOf("(");
-            //int i2 = raw.IndexOf(")");
-            int i1 = raw.IndexOf("[");
-            int i2 = raw.IndexOf("]");
+            int i1 = raw.IndexOf("(");
+            int i2 = raw.IndexOf(")");
+            //int i1 = raw.IndexOf("[");
+            //int i2 = raw.IndexOf("]");
             if (i2 <= i1) return false;
 
             string inside = raw.Substring(i1 + 1, i2 - i1 - 1); // "payload,2"

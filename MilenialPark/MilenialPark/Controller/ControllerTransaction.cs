@@ -368,9 +368,9 @@ namespace MilenialPark.Controller
                 //Insert Transaction
 
                 query = " Insert Into WHNPOS.dbo.Transaksi " +
-                    " (TransactionID, TransactionDate, TotalAmount, PaymentType, CardID, ShopID, Remarks, Subtotal, PPN, InitialBalance, FinalBalance, TransactionStatus, TransactionType, KodeCabang) " +
+                    " (TransactionID, TransactionDate, TotalAmount, PaymentType, CardID, ShopID, Remarks, Subtotal, PPN, InitialBalance, FinalBalance, TransactionStatus, TransactionType, KodeCabang, UserID) " +
                     " values " +
-                    $" ({ClsFungsi.C2Q(trans.TransactionID)}, GETDATE() , {ClsFungsi.C2Q(trans.totalAmount)}, {ClsFungsi.C2Q(trans.PaymentType)}, {ClsFungsi.C2Q(trans.CardID)}, {ClsFungsi.C2Q(trans.ShopId)}, {ClsFungsi.C2Q(trans.Remarks)}, {ClsFungsi.C2Q(trans.Subtotal)}, {ClsFungsi.C2Q(trans.PPN)}, {ClsFungsi.C2Q(trans.InitialBalance)}, {ClsFungsi.C2Q(trans.finalBalance)}, {ClsFungsi.C2Q("PAID")}, {ClsFungsi.C2Q(trans.TransactionType)}, {ClsFungsi.C2Q(ClsStaticVariable.KodeBranch)})";
+                    $" ({ClsFungsi.C2Q(trans.TransactionID)}, GETDATE() , {ClsFungsi.C2Q(trans.totalAmount)}, {ClsFungsi.C2Q(trans.PaymentType)}, {ClsFungsi.C2Q(trans.CardID)}, {ClsFungsi.C2Q(trans.ShopId)}, {ClsFungsi.C2Q(trans.Remarks)}, {ClsFungsi.C2Q(trans.Subtotal)}, {ClsFungsi.C2Q(trans.PPN)}, {ClsFungsi.C2Q(trans.InitialBalance)}, {ClsFungsi.C2Q(trans.finalBalance)}, {ClsFungsi.C2Q("PAID")}, {ClsFungsi.C2Q(trans.TransactionType)}, {ClsFungsi.C2Q(ClsStaticVariable.KodeBranch)}, {ClsFungsi.C2Q(trans.UserID)})";
 
                 try
                 {
@@ -512,6 +512,16 @@ namespace MilenialPark.Controller
             if (string.IsNullOrWhiteSpace(trans.PaymentType))
             {
                 return "Payment Type belum ditentukan.";
+            }
+
+            if (string.IsNullOrWhiteSpace(trans.UserID))
+            {
+                return "UserID transaksi tidak tersedia.";
+            }
+
+            if (string.IsNullOrWhiteSpace(trans.KodeCabang))
+            {
+                return "KodeCabang transaksi tidak tersedia.";
             }
 
             if (card == null)
@@ -697,8 +707,10 @@ namespace MilenialPark.Controller
                 "FinalBalance, " +
                 "TransactionStatus, " +
                 "TransactionType, " +
-                "KodeCabang" +
+                "KodeCabang, " +
+                "UserID" +
                 ") VALUES (" +
+
                 ClsFungsi.C2Q(trans.TransactionID) + ", " +
                 "GETDATE(), " +
                 ClsFungsi.C2Q(trans.totalAmount) + ", " +
@@ -712,7 +724,8 @@ namespace MilenialPark.Controller
                 ClsFungsi.C2Q(trans.finalBalance) + ", " +
                 ClsFungsi.C2Q("PAID") + ", " +
                 ClsFungsi.C2Q(trans.TransactionType) + ", " +
-                ClsFungsi.C2Q(ClsStaticVariable.KodeBranch) +
+                ClsFungsi.C2Q(trans.KodeCabang) + ", " +
+                ClsFungsi.C2Q(trans.UserID) +
                 ")";
 
             try

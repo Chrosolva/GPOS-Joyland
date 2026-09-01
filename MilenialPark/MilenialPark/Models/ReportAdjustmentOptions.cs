@@ -23,7 +23,7 @@ namespace MilenialPark.Models
         public ReportAdjustmentOptions()
         {
             Enabled = false;
-            Percentage = 0;
+            Percentage = 0M;
             RoundingMode = ReportRoundingMode.Nearest;
         }
     }
