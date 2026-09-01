@@ -95,7 +95,7 @@ namespace MilenialPark.Views.Reports
         private void SetupAdjustmentAccess()
         {
             string tipeUser =
-                ClsStaticVariable.controllerUser.objUser.TipeUser ?? "";
+                ClsStaticVariable.controllerUser.objUser?.TipeUser ?? "";
 
             bool isAdmin = tipeUser.Equals(
                 "Admin",
@@ -104,24 +104,46 @@ namespace MilenialPark.Views.Reports
 
             if (isAdmin)
             {
-                // Admin melihat actual/default normal report.
+                // Admin bebas memilih Actual / Adjusted.
                 chkAdjustedReport.Checked = false;
                 chkAdjustedReport.Enabled = true;
-
-                nudAdjustmentPercentage.Enabled = false;
-                cbxRoundingMode.Enabled = false;
             }
             else
             {
-                // Untuk internal management view.
-                chkAdjustedReport.Checked = true;
-                chkAdjustedReport.Enabled = false;
+                // User biasa:
+                // 1 hari = Actual
+                // > 1 hari = Adjusted
+                ApplyRegularUserAdjustmentRule();
 
-                nudAdjustmentPercentage.Enabled = false;
-                cbxRoundingMode.Enabled = false;
+                chkAdjustedReport.Enabled = false;
             }
 
             UpdateAdjustmentControls();
+        }
+
+        private void ApplyRegularUserAdjustmentRule()
+        {
+            string tipeUser =
+                ClsStaticVariable.controllerUser.objUser?.TipeUser ?? "";
+
+            bool isAdmin = tipeUser.Equals(
+                "Admin",
+                StringComparison.OrdinalIgnoreCase
+            );
+
+            if (isAdmin)
+                return;
+
+            DateTime fromDate = dtpFrom.Value.Date;
+            DateTime toDate = dtpTo.Value.Date;
+            DateTime today = DateTime.Today;
+
+            bool todayOnly =
+                fromDate == today &&
+                toDate == today;
+
+            chkAdjustedReport.Checked =
+                !todayOnly;
         }
 
         private void SetupRoundingMode()
@@ -136,45 +158,46 @@ namespace MilenialPark.Views.Reports
             cbxRoundingMode.SelectedIndex = 1;
         }
 
-        private decimal ApplyRounding(
-    decimal value,
-    ReportRoundingMode roundingMode)
+        private ReportAdjustmentOptions GetAdjustmentOptions()
         {
-            switch (roundingMode)
+            ReportAdjustmentOptions options =
+                new ReportAdjustmentOptions();
+
+            options.Enabled =
+                chkAdjustedReport.Checked;
+
+            options.Percentage =
+                nudAdjustmentPercentage.Value;
+
+            switch (cbxRoundingMode.SelectedIndex)
             {
-                case ReportRoundingMode.Down:
-                    return Math.Floor(value);
+                case 0:
+                    options.RoundingMode =
+                        ReportRoundingMode.None;
+                    break;
 
-                case ReportRoundingMode.Up:
-                    return Math.Ceiling(value);
+                case 1:
+                    options.RoundingMode =
+                        ReportRoundingMode.Nearest;
+                    break;
 
-                case ReportRoundingMode.Nearest:
-                    return Math.Round(
-                        value,
-                        0,
-                        MidpointRounding.AwayFromZero
-                    );
+                case 2:
+                    options.RoundingMode =
+                        ReportRoundingMode.Down;
+                    break;
+
+                case 3:
+                    options.RoundingMode =
+                        ReportRoundingMode.Up;
+                    break;
 
                 default:
-                    return value;
+                    options.RoundingMode =
+                        ReportRoundingMode.Nearest;
+                    break;
             }
-        }
 
-        private decimal CalculateAdjustedValue(
-    decimal originalValue,
-    decimal percentage,
-    ReportRoundingMode roundingMode)
-        {
-            decimal multiplier =
-                1M - (percentage / 100M);
-
-            decimal result =
-                originalValue * multiplier;
-
-            return ApplyRounding(
-                result,
-                roundingMode
-            );
+            return options;
         }
 
 
@@ -219,110 +242,219 @@ namespace MilenialPark.Views.Reports
 
         private void btnSave_Click(object sender, EventArgs e)
         {
-            DateTime from = dtpFrom.Value;
-            DateTime to = dtpTo.Value;
-
-            setParameter();
-
-            if (cbxReportType.SelectedIndex == 0)
+            try
             {
-                ds = controllerReport.LoadPendapatan(dtpFrom.Value, dtpTo.Value, TransactionTypeVal, PaymentTypeVal, UserIDVal, RemarksVal);
+                DateTime from =
+                    dtpFrom.Value.Date;
 
-                reportDoc = new MilenialPark.Reports.PrintLaporanDetailPenjualan();
+                DateTime to =
+                    dtpTo.Value.Date
+                    .AddDays(1)
+                    .AddSeconds(-1);
+
+                setParameter();
+
+                ReportAdjustmentOptions adjustmentOptions =
+                    GetAdjustmentOptions();
+
+                LoadSelectedReport(
+                    from,
+                    to
+                );
+
+                controllerReport.ApplyReportAdjustment(
+                    ds,
+                    adjustmentOptions
+                );
+
                 reportDoc.SetDataSource(ds);
-                reportDoc.SetParameterValue("StartDate", new DateTime(from.Year, from.Month, from.Day, 0, 0, 0));
-                reportDoc.SetParameterValue("EndDate", new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
-                reportDoc.SetParameterValue("Title", txtReportTitle.Text);
 
-                crViewer.ReportSource = reportDoc;
+                reportDoc.SetParameterValue(
+                    "StartDate",
+                    from
+                );
+
+                reportDoc.SetParameterValue(
+                    "EndDate",
+                    to
+                );
+
+                reportDoc.SetParameterValue(
+                    "Title",
+                    txtReportTitle.Text
+                );
+
+                crViewer.ReportSource =
+                    reportDoc;
+
+                crViewer.Refresh();
             }
-            else if (cbxReportType.SelectedIndex == 1)
+            catch (Exception ex)
             {
-                ds = controllerReport.LoadPendapatanGroup(dtpFrom.Value, dtpTo.Value, TransactionTypeVal, PaymentTypeVal, UserIDVal, RemarksVal);
-
-                reportDoc = new MilenialPark.Reports.LaporanPenjualan();
-                reportDoc.SetDataSource(ds);
-                reportDoc.SetParameterValue("StartDate", new DateTime(from.Year, from.Month, from.Day, 0, 0, 0));
-                reportDoc.SetParameterValue("EndDate", new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
-                reportDoc.SetParameterValue("Title", txtReportTitle.Text);
-
-                crViewer.ReportSource = reportDoc;
+                MessageBox.Show(
+                    ex.Message,
+                    "Report Error",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error
+                );
             }
-            else if(cbxReportType.SelectedIndex == 2)
+        }
+
+        private void LoadSelectedReport(
+    DateTime from,
+    DateTime to)
+        {
+            switch (cbxReportType.SelectedIndex)
             {
-                ds = controllerReport.LoadPenjualan(dtpFrom.Value, dtpTo.Value, TransactionTypeVal, PaymentTypeVal, UserIDVal, RemarksVal);
+                case 0:
 
-                reportDoc = new MilenialPark.Reports.PrintLaporanDetailPenjualan();
-                reportDoc.SetDataSource(ds);
-                reportDoc.SetParameterValue("StartDate", new DateTime(from.Year, from.Month, from.Day, 0, 0, 0));
-                reportDoc.SetParameterValue("EndDate", new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
-                reportDoc.SetParameterValue("Title", txtReportTitle.Text);
+                    ds = controllerReport.LoadPendapatan(
+                        from,
+                        to,
+                        TransactionTypeVal,
+                        PaymentTypeVal,
+                        UserIDVal,
+                        RemarksVal
+                    );
 
-                crViewer.ReportSource = reportDoc;
-            }
+                    reportDoc =
+                        new MilenialPark.Reports
+                        .PrintLaporanDetailPenjualan();
 
-            else if (cbxReportType.SelectedIndex == 3)
-            {
-                ds = controllerReport.LoadPenjualanGroup(dtpFrom.Value, dtpTo.Value, TransactionTypeVal, PaymentTypeVal, UserIDVal, RemarksVal);
+                    break;
 
-                reportDoc = new MilenialPark.Reports.LaporanPenjualan();
-                reportDoc.SetDataSource(ds);
-                reportDoc.SetParameterValue("StartDate", new DateTime(from.Year, from.Month, from.Day, 0, 0, 0));
-                reportDoc.SetParameterValue("EndDate", new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
-                reportDoc.SetParameterValue("Title", txtReportTitle.Text);
 
-                crViewer.ReportSource = reportDoc;
-            }
+                case 1:
 
-            else if (cbxReportType.SelectedIndex == 4)
-            {
-                ds = controllerReport.LoadPendapatanSummary(dtpFrom.Value, dtpTo.Value, TransactionTypeVal, PaymentTypeVal, UserIDVal, RemarksVal);
+                    ds = controllerReport.LoadPendapatanGroup(
+                        from,
+                        to,
+                        TransactionTypeVal,
+                        PaymentTypeVal,
+                        UserIDVal,
+                        RemarksVal
+                    );
 
-                reportDoc = new MilenialPark.Reports.LaporanSummaryPenjualan();
-                reportDoc.SetDataSource(ds);
-                reportDoc.SetParameterValue("StartDate", new DateTime(from.Year, from.Month, from.Day, 0, 0, 0));
-                reportDoc.SetParameterValue("EndDate", new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
-                reportDoc.SetParameterValue("Title", txtReportTitle.Text);
+                    reportDoc =
+                        new MilenialPark.Reports
+                        .LaporanPenjualan();
 
-                crViewer.ReportSource = reportDoc;
-            }
-            else if (cbxReportType.SelectedIndex == 5)
-            {
-                ds = controllerReport.LoadPenjualanSummary(dtpFrom.Value, dtpTo.Value, TransactionTypeVal, PaymentTypeVal, UserIDVal, RemarksVal);
+                    break;
 
-                reportDoc = new MilenialPark.Reports.LaporanSummaryPenjualan();
-                reportDoc.SetDataSource(ds);
-                reportDoc.SetParameterValue("StartDate", new DateTime(from.Year, from.Month, from.Day, 0, 0, 0));
-                reportDoc.SetParameterValue("EndDate", new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
-                reportDoc.SetParameterValue("Title", txtReportTitle.Text);
 
-                crViewer.ReportSource = reportDoc;
-            }
+                case 2:
 
-            else if (cbxReportType.SelectedIndex == 6)
-            {
-                ds = controllerReport.LoadPendapatanSummary(dtpFrom.Value, dtpTo.Value, TransactionTypeVal, PaymentTypeVal, UserIDVal, RemarksVal);
+                    ds = controllerReport.LoadPenjualan(
+                        from,
+                        to,
+                        TransactionTypeVal,
+                        PaymentTypeVal,
+                        UserIDVal,
+                        RemarksVal
+                    );
 
-                reportDoc = new MilenialPark.Reports.PrintShiftSummary();
-                reportDoc.SetDataSource(ds);
-                reportDoc.SetParameterValue("StartDate", new DateTime(from.Year, from.Month, from.Day, 0, 0, 0));
-                reportDoc.SetParameterValue("EndDate", new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
-                reportDoc.SetParameterValue("Title", txtReportTitle.Text);
+                    reportDoc =
+                        new MilenialPark.Reports
+                        .PrintLaporanDetailPenjualan();
 
-                crViewer.ReportSource = reportDoc;
-            }
+                    break;
 
-            else if (cbxReportType.SelectedIndex == 7)
-            {
-                ds = controllerReport.LoadPenjualanSummary(dtpFrom.Value, dtpTo.Value, TransactionTypeVal, PaymentTypeVal, UserIDVal, RemarksVal);
 
-                reportDoc = new MilenialPark.Reports.PrintShiftSummary();
-                reportDoc.SetDataSource(ds);
-                reportDoc.SetParameterValue("StartDate", new DateTime(from.Year, from.Month, from.Day, 0, 0, 0));
-                reportDoc.SetParameterValue("EndDate", new DateTime(to.Year, to.Month, to.Day, 23, 59, 59));
-                reportDoc.SetParameterValue("Title", txtReportTitle.Text);
+                case 3:
 
-                crViewer.ReportSource = reportDoc;
+                    ds = controllerReport.LoadPenjualanGroup(
+                        from,
+                        to,
+                        TransactionTypeVal,
+                        PaymentTypeVal,
+                        UserIDVal,
+                        RemarksVal
+                    );
+
+                    reportDoc =
+                        new MilenialPark.Reports
+                        .LaporanPenjualan();
+
+                    break;
+
+
+                case 4:
+
+                    ds = controllerReport.LoadPendapatanSummary(
+                        from,
+                        to,
+                        TransactionTypeVal,
+                        PaymentTypeVal,
+                        UserIDVal,
+                        RemarksVal
+                    );
+
+                    reportDoc =
+                        new MilenialPark.Reports
+                        .LaporanSummaryPenjualan();
+
+                    break;
+
+
+                case 5:
+
+                    ds = controllerReport.LoadPenjualanSummary(
+                        from,
+                        to,
+                        TransactionTypeVal,
+                        PaymentTypeVal,
+                        UserIDVal,
+                        RemarksVal
+                    );
+
+                    reportDoc =
+                        new MilenialPark.Reports
+                        .LaporanSummaryPenjualan();
+
+                    break;
+
+
+                case 6:
+
+                    ds = controllerReport.LoadPendapatanSummary(
+                        from,
+                        to,
+                        TransactionTypeVal,
+                        PaymentTypeVal,
+                        UserIDVal,
+                        RemarksVal
+                    );
+
+                    reportDoc =
+                        new MilenialPark.Reports
+                        .PrintShiftSummary();
+
+                    break;
+
+
+                case 7:
+
+                    ds = controllerReport.LoadPenjualanSummary(
+                        from,
+                        to,
+                        TransactionTypeVal,
+                        PaymentTypeVal,
+                        UserIDVal,
+                        RemarksVal
+                    );
+
+                    reportDoc =
+                        new MilenialPark.Reports
+                        .PrintShiftSummary();
+
+                    break;
+
+
+                default:
+
+                    throw new InvalidOperationException(
+                        "Please select a report type."
+                    );
             }
         }
 
@@ -373,20 +505,32 @@ namespace MilenialPark.Views.Reports
 
         private void UpdateAdjustmentControls()
         {
-            bool isAdmin =
-                ClsStaticVariable.controllerUser.objUser.TipeUser
-                .Equals(
-                    "Admin",
-                    StringComparison.OrdinalIgnoreCase
-                );
+            string tipeUser =
+                ClsStaticVariable.controllerUser.objUser?.TipeUser ?? "";
 
-            bool enabled = chkAdjustedReport.Checked;
+            bool isAdmin = tipeUser.Equals(
+                "Admin",
+                StringComparison.OrdinalIgnoreCase
+            );
 
+            bool adjustmentEnabled = chkAdjustedReport.Checked;
+
+            // Hanya admin yang boleh mengubah setting.
             nudAdjustmentPercentage.Enabled =
-                isAdmin && enabled;
+                isAdmin && adjustmentEnabled;
 
             cbxRoundingMode.Enabled =
-                isAdmin && enabled;
+                isAdmin && adjustmentEnabled;
+        }
+
+        private void dtpTo_ValueChanged(object sender, EventArgs e)
+        {
+            ApplyRegularUserAdjustmentRule();
+        }
+
+        private void dtpFrom_ValueChanged(object sender, EventArgs e)
+        {
+            ApplyRegularUserAdjustmentRule();
         }
     }
 }

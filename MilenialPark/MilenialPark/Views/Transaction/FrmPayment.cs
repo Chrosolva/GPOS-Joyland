@@ -424,6 +424,14 @@ namespace MilenialPark.Views.Transaction
                 controllerTran.objTransaction.PaymentType =
                     cbxPaymentType.Text;
 
+                // User yang sedang login
+                controllerTran.objTransaction.UserID =
+                    ClsStaticVariable.controllerUser.objUser?.UserID ?? "";
+
+                // Cabang aktif
+                controllerTran.objTransaction.KodeCabang =
+                    ClsStaticVariable.KodeBranch ?? "";
+
                 controllerTran.objTransaction.InitialBalance =
                     isMasterCard
                         ? controllerTran.objCard.Saldo
@@ -494,6 +502,28 @@ namespace MilenialPark.Views.Transaction
                     finalTransactionID,
                     logMessage
                 );
+
+                if (string.IsNullOrWhiteSpace(
+    controllerTran.objTransaction.UserID))
+                {
+                    ClsFungsi.Pesan(
+                        "User ID login tidak tersedia. Silakan login ulang.",
+                        "ERROR"
+                    );
+
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(
+                    controllerTran.objTransaction.KodeCabang))
+                {
+                    ClsFungsi.Pesan(
+                        "Kode cabang tidak tersedia.",
+                        "ERROR"
+                    );
+
+                    return;
+                }
 
                 #endregion
 
